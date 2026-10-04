@@ -47,7 +47,7 @@ describe('analyze command', () => {
 
     expect(exitCode).toBe(0);
     expect(stdout).toContain('Name: example-skill');
-    expect(stdout).toContain('Entry File: fixtures/valid-skill/SKILL.md');
+    expect(stdout).toContain('Entry File: SKILL.md');
   });
 
   it('analyzes an absolute path', async () => {
@@ -142,10 +142,12 @@ describe('phase 1 command surface', () => {
     expect(stderr).toBe('');
   });
 
-  it('advertises only the analyze command', async () => {
+  it('advertises analyze and validate, and no unimplemented command', async () => {
     const { stdout } = await run('--help');
 
-    for (const absent of ['convert', 'validate', 'import', 'install']) {
+    expect(stdout).toContain('analyze');
+    expect(stdout).toContain('validate');
+    for (const absent of ['convert', 'import', 'install']) {
       expect(stdout).not.toContain(`${absent} `);
     }
   });

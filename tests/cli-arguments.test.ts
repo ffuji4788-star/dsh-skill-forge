@@ -100,11 +100,10 @@ describe('flag parsing', () => {
 });
 
 describe('operand rejection', () => {
-  // `analyze` is a real Phase 1 command, so only unimplemented commands are
-  // rejected here.
+  // `analyze` and `validate` are real commands, so only unimplemented commands
+  // are rejected here.
   it.each([
     ['convert', ['convert']],
-    ['validate', ['validate']],
     ['import', ['import']],
     ['convert after a terminator', ['--', 'convert']],
   ])('rejects %s with a message naming it', async (_label, argv) => {

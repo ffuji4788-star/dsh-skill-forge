@@ -43,9 +43,9 @@ describe('createProgram', () => {
     expect(readPackageInfo().nodeRequirement).toBe('>=20.19.0');
   });
 
-  it('registers exactly the analyze command in Phase 1', () => {
+  it('registers exactly the analyze and validate commands in Phase 2', () => {
     const commands = createProgram().commands;
 
-    expect(commands.map((command) => command.name())).toEqual(['analyze']);
+    expect(commands.map((command) => command.name())).toEqual(['analyze', 'validate']);
   });
 });

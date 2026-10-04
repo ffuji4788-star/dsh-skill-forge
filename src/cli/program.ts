@@ -1,13 +1,16 @@
 /**
  * Builds the `dsh-forge` command-line interface.
  *
- * Phase 1 registers exactly one command, `analyze`, which reads a local skill.
- * No conversion, validation, import or model-provider command exists.
+ * Phase 2 registers exactly two commands: `analyze` reads a local skill and
+ * `validate` checks it deterministically. No conversion, compatibility
+ * validation, import or model-provider command exists.
  */
 import { Command } from 'commander';
 
+import { EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-codes.js';
 import { describeNodeRequirement, readPackageInfo } from '../utils/package-info.js';
 import { runAnalyze } from './analyze-command.js';
+import { runValidate } from './validate-command.js';
 
 /**
  * Parts of the root help footer. The environment line is built from the
@@ -20,7 +23,8 @@ const HELP_FOOTER_SECTIONS = [
   commands, scripts, executables or binaries from a third-party skill. Skill
   resources are enumerated and read, never run.`,
   `Status:
-  Phase 1 (local skill analysis). Only \`analyze\` exists so far.`,
+  Phase 2 (local skill analysis and deterministic validation). \`analyze\` and
+  \`validate\` exist so far.`,
 ];
 
 function buildEnvironmentSection(nodeRequirement: string | undefined): string {
@@ -97,6 +101,25 @@ export function createProgram(writeOut: (text: string) => void = () => {}): Comm
         return;
       }
       writeOut(runAnalyze(inputPath));
+    });
+
+  program
+    .command('validate')
+    .description('Validate a local skill deterministically. Nothing is executed.')
+    .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
+    .usage('<path>')
+    .action((inputPath: string | undefined) => {
+      if (inputPath === undefined || inputPath.length === 0) {
+        program.error("error: missing required argument 'path'", { exitCode: 1 });
+        return;
+      }
+
+      const { report, result } = runValidate(inputPath);
+      writeOut(report);
+
+      // A completed validation is a normal outcome, so the report stays on
+      // stdout; only the status code distinguishes pass from failure (2).
+      process.exitCode = result.valid ? EXIT_SUCCESS : EXIT_VALIDATION_FAILED;
     });
 
   return program;

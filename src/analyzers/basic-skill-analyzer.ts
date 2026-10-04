@@ -6,6 +6,11 @@
  * conventions and never executes a skill's resources.
  */
 import type { ParsedSkill } from '../schemas/skill.js';
+import { findSkillNameProblem, formatSkillNameProblem, isKebabCase } from '../utils/skill-name.js';
+
+// Re-exported so existing callers of the analyzer keep working; the rule itself
+// lives in `utils/skill-name.ts` as the single source of truth.
+export { isKebabCase };
 
 /** Outcome of a single check. */
 export interface SkillCheck {
@@ -33,19 +38,6 @@ export interface SkillAnalysis {
   };
 }
 
-/**
- * Reports whether a name is kebab-case.
- *
- * Kebab-case here means lower-case alphanumeric segments separated by single
- * hyphens: `example-skill`, `skill2`, `a-b-c`. Underscores, spaces, upper-case
- * letters, leading/trailing hyphens and repeated hyphens are rejected.
- *
- * @param name Candidate name.
- */
-export function isKebabCase(name: string): boolean {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name);
-}
-
 function checkName(name: string | undefined): SkillCheck {
   if (name === undefined) {
     return { passed: false, message: 'missing (frontmatter has no string "name")' };
@@ -70,12 +62,12 @@ function checkKebabCase(name: string | undefined): SkillCheck {
   if (name === undefined || name.trim().length === 0) {
     return { passed: false, message: 'not applicable (no name to check)' };
   }
-  if (!isKebabCase(name)) {
-    return {
-      passed: false,
-      message: `"${name}" is not kebab-case (expected lower-case words separated by single hyphens)`,
-    };
+
+  const problem = findSkillNameProblem(name);
+  if (problem !== undefined) {
+    return { passed: false, message: formatSkillNameProblem(name, problem) };
   }
+
   return { passed: true };
 }
 

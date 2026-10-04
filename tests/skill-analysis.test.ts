@@ -110,7 +110,7 @@ describe('analyze report rendering', () => {
 
     expect(report).toContain('Skill Analysis');
     expect(report).toContain('Name: example-skill');
-    expect(report).toContain('Entry File: fixtures/valid-skill/SKILL.md');
+    expect(report).toContain('Entry File: SKILL.md');
     expect(report).toContain('Resources: 2');
     expect(report).toMatch(/Body Length: \d+/);
     expect(report).toContain('Frontmatter Keys: name, description');
@@ -137,11 +137,13 @@ describe('analyze report rendering', () => {
     expect(report).toContain('is not kebab-case');
   });
 
-  it('shows a relative entry file path, not an absolute machine path', () => {
+  it('shows an entry file path relative to the skill root, never an absolute path', () => {
     const report = analyzeFixture('valid-skill');
 
     expect(report).not.toContain(repositoryRoot);
-    expect(report).toContain('fixtures/valid-skill/SKILL.md');
+    // The skill root is `fixtures/valid-skill`, so the entry file is just its
+    // file name; showing a higher directory would leak unrelated path segments.
+    expect(report).toContain('Entry File: SKILL.md');
   });
 
   it('omits the resource section when a skill has no resources', () => {

@@ -15,13 +15,8 @@ import { CommanderError, type Command } from 'commander';
 
 import { formatErrorMessage } from '../utils/error-message.js';
 import { ForgeError } from '../utils/errors.js';
+import { EXIT_FATAL, EXIT_SUCCESS } from '../utils/exit-codes.js';
 import { createProgram, renderRootHelp, stripOptionTerminator } from './program.js';
-
-/** Exit code used when no error occurred. */
-const EXIT_SUCCESS = 0;
-
-/** Exit code used for usage errors, input errors and unexpected failures. */
-const EXIT_FAILURE = 1;
 
 /** Commander exit codes that mean "the requested output was printed". */
 const BENIGN_EXIT_CODES: ReadonlySet<string> = new Set([
@@ -98,8 +93,12 @@ function printRequestedHelp(
 /**
  * Parses `argv` and runs the matching command.
  *
+ * A command may report a non-fatal outcome through `process.exitCode` (the
+ * `validate` command uses it for a validation failure); that value becomes the
+ * result, so a completed validation and a fatal error stay distinguishable.
+ *
  * @param options Argument vector and optional output sinks.
- * @returns `0` on success (including `--help` and `--version`), otherwise `1`.
+ * @returns {@link EXIT_SUCCESS}, {@link EXIT_VALIDATION_FAILED} or {@link EXIT_FATAL}.
  */
 export async function runCli(options: RunOptions): Promise<number> {
   const writeOut = options.stdout ?? ((text: string): void => void process.stdout.write(text));
@@ -112,6 +111,10 @@ export async function runCli(options: RunOptions): Promise<number> {
     writeErr,
   });
 
+  // The exit code is an output of this call, never a leftover from a previous
+  // one, so a caller can invoke runCli repeatedly and get stable results.
+  process.exitCode = EXIT_SUCCESS;
+
   const argv = stripOptionTerminator(options.argv);
   if (printRequestedHelp(program, argv, writeOut)) {
     return EXIT_SUCCESS;
@@ -119,7 +122,7 @@ export async function runCli(options: RunOptions): Promise<number> {
 
   try {
     await program.parseAsync(argv, { from: 'user' });
-    return EXIT_SUCCESS;
+    return process.exitCode ?? EXIT_SUCCESS;
   } catch (error) {
     if (error instanceof CommanderError) {
       if (BENIGN_EXIT_CODES.has(error.code)) {
@@ -128,13 +131,13 @@ export async function runCli(options: RunOptions): Promise<number> {
       // Commander has already written the usage error to stderr. Commander does
       // not always populate `exitCode`, but every non-benign CommanderError is a
       // usage failure, so it must never be reported as success.
-      return EXIT_FAILURE;
+      return EXIT_FATAL;
     }
     if (error instanceof ForgeError) {
       writeErr(`dsh-forge: ${error.message}\n`);
-      return EXIT_FAILURE;
+      return EXIT_FATAL;
     }
     writeErr(`dsh-forge: unexpected failure: ${formatErrorMessage(error)}\n`);
-    return EXIT_FAILURE;
+    return EXIT_FATAL;
   }
 }

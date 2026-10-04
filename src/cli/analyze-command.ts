@@ -7,14 +7,15 @@ import path from 'node:path';
 
 import { analyzeBasicSkill, type SkillAnalysis } from '../analyzers/basic-skill-analyzer.js';
 import { loadLocalSkill } from '../importers/local-importer.js';
+import { renderValue, toDisplayEntryFile } from './render-utils.js';
 
 export interface RenderAnalysisOptions {
-  /** Directory that the entry file path is displayed relative to. */
-  readonly baseDirectory: string;
+  /** Absolute skill root directory that the entry file is displayed relative to. */
+  readonly rootPath: string;
 }
 
 export interface RunAnalyzeOptions {
-  /** Directory used both to resolve the input and to shorten displayed paths. */
+  /** Directory used to resolve the input path. Defaults to the process cwd. */
   readonly cwd?: string;
 }
 
@@ -23,25 +24,11 @@ function renderCheck(label: string, passed: boolean, message?: string): string {
   return message === undefined ? `${label}: ${status}` : `${label}: ${status} (${message})`;
 }
 
-function renderValue(value: string | undefined): string {
-  return value === undefined ? '(none)' : value;
-}
-
-/**
- * Shortens an absolute path for display, using `/` separators so output is
- * identical on Windows and POSIX.
- */
-function toDisplayPath(target: string, baseDirectory: string): string {
-  const relative = path.relative(baseDirectory, target);
-  const display = relative.length === 0 ? path.basename(target) : relative;
-  return display.split(path.sep).join('/');
-}
-
 /**
  * Renders an analysis report for people and for tests.
  *
- * Only the entry file is shortened: resource paths are already relative to the
- * skill root.
+ * Resource paths are already relative to the skill root; the entry file is
+ * shortened the same way so no absolute machine path appears in the output.
  *
  * @param analysis Result of {@link analyzeBasicSkill}.
  * @param options Display options.
@@ -53,7 +40,7 @@ export function renderAnalysis(analysis: SkillAnalysis, options: RenderAnalysisO
     '',
     `Name: ${renderValue(analysis.name)}`,
     `Description: ${renderValue(analysis.description)}`,
-    `Entry File: ${toDisplayPath(analysis.entryFile, options.baseDirectory)}`,
+    `Entry File: ${toDisplayEntryFile(analysis.entryFile, options.rootPath)}`,
     `Resources: ${analysis.resourceCount}`,
     `Body Length: ${analysis.bodyLength}`,
     `Frontmatter Keys: ${
@@ -93,8 +80,7 @@ export function renderAnalysis(analysis: SkillAnalysis, options: RenderAnalysisO
  */
 export function runAnalyze(inputPath: string, options: RunAnalyzeOptions = {}): string {
   const cwd = path.resolve(options.cwd ?? process.cwd());
-  const absoluteInput = path.resolve(cwd, inputPath);
-  const skill = loadLocalSkill(absoluteInput);
+  const skill = loadLocalSkill(path.resolve(cwd, inputPath));
 
-  return renderAnalysis(analyzeBasicSkill(skill), { baseDirectory: cwd });
+  return renderAnalysis(analyzeBasicSkill(skill), { rootPath: path.dirname(skill.entryFile) });
 }
