@@ -1,10 +1,11 @@
 /**
  * Public library entry point of `dsh-skill-forge`.
  *
- * Phase 3 exposes local skill reading, analysis, deterministic structural
- * validation and compatibility checking against a pinned DeepSeek Harness
- * contract. Conversion, remote import, license analysis and model providers are
- * not implemented and are not exported.
+ * Phase 4 exposes local skill reading, analysis, deterministic structural
+ * validation, compatibility checking against a pinned DeepSeek Harness contract,
+ * and canonical Universal Skill IR normalization. Conversion, source or target
+ * adapters, remote import, license analysis and model providers are not
+ * implemented and are not exported.
  */
 export {
   analyzeBasicSkill,
@@ -24,6 +25,7 @@ export {
   type RenderCompatibilityOptions,
   type RunCompatOptions,
 } from './cli/compat-command.js';
+export { runNormalize, type RunNormalizeOptions } from './cli/normalize-command.js';
 export { createProgram, stripOptionTerminator } from './cli/program.js';
 export { runCli, type RunOptions } from './cli/run.js';
 export {
@@ -42,6 +44,26 @@ export {
   type SourcePackage,
   type SourceType,
 } from './importers/local-importer.js';
+export { isJsonSafe, toCanonicalJson, type JsonObject, type JsonValue } from './ir/json-value.js';
+export {
+  normalizeEntryFile,
+  normalizeSkill,
+  SkillIRError,
+  SkillNotNormalizableError,
+  toLf,
+  toSkillIR,
+  type NormalizeResult,
+} from './ir/normalize-skill.js';
+export { serializeSkillIR } from './ir/serialize-skill-ir.js';
+export {
+  GENERIC_LOCAL_SKILL_FORMAT,
+  isSkillIR,
+  KNOWN_SOURCE_FORMATS,
+  SKILL_IR_SCHEMA_VERSION,
+  validateSkillIR,
+  type SkillIR,
+  type SkillIRSource,
+} from './ir/skill-ir.js';
 export {
   parseFrontmatter,
   type FrontmatterResult,

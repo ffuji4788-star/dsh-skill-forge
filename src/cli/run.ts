@@ -104,7 +104,7 @@ export async function runCli(options: RunOptions): Promise<number> {
   const writeOut = options.stdout ?? ((text: string): void => void process.stdout.write(text));
   const writeErr = options.stderr ?? ((text: string): void => void process.stderr.write(text));
 
-  const program = createProgram(writeOut);
+  const program = createProgram(writeOut, writeErr);
   applyExitOverride(program);
   program.configureOutput({
     writeOut,

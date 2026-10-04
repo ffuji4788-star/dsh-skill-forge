@@ -6,20 +6,21 @@ agent ecosystems (Claude Code, Codex, OpenCode, ...) so that they can be adapted
 for use with DeepSeek Harness.
 
 The long-term goal is a skill conversion toolchain. **Only local skill analysis,
-local structural validation and pinned DeepSeek Harness compatibility checking
-exist so far.**
+local structural validation, pinned DeepSeek Harness compatibility checking and
+canonical Universal Skill IR normalization exist so far.**
 
 ## Current status
 
-**Phase 3 / DeepSeek Harness Compatibility Profile.**
+**Phase 4 / Universal Skill IR v1.**
 
-Three commands exist, and they answer three different questions:
+Four commands exist, and they answer four different questions:
 
-| Command                     | Question it answers                                                            |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| `dsh-forge analyze <path>`  | What is in this skill?                                                         |
-| `dsh-forge validate <path>` | Is the skill structurally sound?                                               |
-| `dsh-forge compat <path>`   | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
+| Command                      | Question it answers                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| `dsh-forge analyze <path>`   | What is in this skill?                                                         |
+| `dsh-forge validate <path>`  | Is the skill structurally sound?                                               |
+| `dsh-forge compat <path>`    | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
+| `dsh-forge normalize <path>` | What is the canonical, platform-neutral representation of this skill?          |
 
 Nothing is converted, imported from the network, or sent to a model. Every
 command is deterministic and offline: the same input always produces the same
@@ -41,9 +42,10 @@ pnpm dev -- --version
 pnpm dev -- analyze fixtures/valid-skill
 pnpm dev -- validate fixtures/validate-valid
 pnpm dev -- compat fixtures/dsh/compatible-minimal
+pnpm dev -- normalize fixtures/normalize/minimal
 ```
 
-All three commands accept the same kinds of path:
+All four commands accept the same kinds of path:
 
 - a single Markdown file, for example `SKILL.md`;
 - a directory, in which case `SKILL.md` is used when present. If it is absent, a
@@ -226,23 +228,73 @@ DeepSeek Harness is in **developer preview**. Future upstream changes may requir
 updating this compatibility profile; the pinned commit above is what the current
 results describe.
 
+### Normalizing a skill to Universal Skill IR
+
+```bash
+dsh-forge normalize <path>
+```
+
+`normalize` emits the canonical, platform-neutral **Universal Skill IR v1** for a
+skill that already passes generic structural validation. stdout carries the JSON
+document and nothing else, so it can be redirected straight to a file:
+
+```bash
+dsh-forge normalize ./my-skill > my-skill.ir.json
+```
+
+Example output:
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "normalize-minimal",
+  "description": "The smallest skill that can be normalized into Universal Skill IR v1.",
+  "instructions": "\n# Normalize Minimal\n\nRequired frontmatter only, so the IR contains no extra frontmatter.\n",
+  "resources": [],
+  "source": {
+    "format": "generic-local-skill",
+    "entryFile": "SKILL.md",
+    "extraFrontmatter": {}
+  }
+}
+```
+
+The IR treats exactly three fields as universal — `name`, `description` and
+`instructions` — and preserves every other frontmatter field verbatim in
+`source.extraFrontmatter`, so nothing is lost and nothing is guessed at. It
+carries no absolute paths, no resource contents, and no target-specific
+vocabulary. The full contract is in
+[docs/skill-ir-v1.md](./docs/skill-ir-v1.md).
+
+If generic validation fails, `normalize` produces **no** IR — not even a partial
+one — and exits `2`. That is a deliberate IR v1 invariant, and it means
+compatibility and normalization are independent:
+
+```text
+$ dsh-forge compat fixtures/dsh/whitespace-description   # exit 0, COMPATIBLE
+$ dsh-forge validate fixtures/dsh/whitespace-description # exit 2, EMPTY_DESCRIPTION
+$ dsh-forge normalize fixtures/dsh/whitespace-description # exit 2, refused
+```
+
 ### Exit codes
 
-| Code | Meaning                                                                                                                   |
-| ---- | ------------------------------------------------------------------------------------------------------------------------- |
-| `0`  | Analysis completed / validation passed / compatible (warnings allowed)                                                    |
-| `1`  | Fatal input, filesystem or parser error, for example a missing path, malformed YAML frontmatter or an ambiguous directory |
-| `2`  | The check completed and failed: `validate` found an `error` severity issue, or `compat` found the skill incompatible      |
+| Code | Meaning                                                                                                                                                           |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | Analysis completed / validation passed / compatible / IR produced                                                                                                 |
+| `1`  | Fatal input, filesystem or parser error, for example a missing path, malformed YAML frontmatter or an ambiguous directory                                         |
+| `2`  | The operation completed and was refused: `validate` found an `error` issue, `compat` found the skill incompatible, or `normalize` hit the generic validation gate |
 
-A failed check is a normal outcome: the report is written to stdout and the exit
-code carries the status. A fatal error is written to stderr. A malformed
-frontmatter block is always fatal (`1`) and is never reported as a validation or
-compatibility issue, because the skill could not be read in the first place.
+A refused check is a normal outcome: for `validate` and `compat` the report is
+written to stdout with a non-zero code. `normalize` writes nothing to stdout when
+it refuses, so a redirect never produces a half-written document. A fatal error is
+written to stderr. A malformed frontmatter block is always fatal (`1`) and is never
+reported as a validation or compatibility issue, because the skill could not be
+read in the first place.
 
 `pnpm build` compiles TypeScript to `dist/`, producing a runnable CLI:
 
 ```bash
-node dist/src/cli/index.js compat fixtures/dsh/compatible-minimal
+node dist/src/cli/index.js normalize fixtures/normalize/minimal
 # or, after `pnpm link` / a global install, the `dsh-forge` binary
 ```
 
@@ -254,11 +306,13 @@ so none of them can drift from the published package.
 
 None of the following exists, not even as a stub:
 
-- Universal skill IR (intermediate representation)
-- Claude / Codex / OpenCode adapters
 - Skill conversion or rewriting
+- DeepSeek Harness emitter or writer
+- Claude / Codex / OpenCode adapters
+- Source or target adapter registry
+- Automatic migration
 - GitHub import
-- License analysis
+- License analysis or rewriting
 - Provenance analysis
 - DeepSeek or any other LLM provider integration
 - AI-assisted rewriting
@@ -269,31 +323,39 @@ Conversion and import commands do not exist, so passing `convert`, `import` or
 `install` returns an unknown-command error. `compat` answers a narrower question
 than conversion: it reports whether the **pinned** DeepSeek Harness
 implementation would accept and discover a skill — it does not migrate, rewrite or
-install one, and it makes no claim about future upstream revisions.
+install one, and it makes no claim about future upstream revisions. `normalize`
+produces a canonical representation only; it does not write, convert or install
+anything, and it emits no target-specific skill.
+
+Universal Skill IR v1 does **not** mean universal skill semantic equivalence — it
+is a stable canonical representation, not a completed mapping of every platform's
+vocabulary. See [docs/skill-ir-v1.md](./docs/skill-ir-v1.md).
 
 ## Project layout
 
 ```text
 src/
-├── cli/          # entry point, program definition, run loop, analyze/validate/compat commands
+├── cli/          # entry point, program definition, run loop, analyze/validate/compat/normalize
 ├── importers/    # local-importer.ts — reads a skill from disk
 ├── parsers/      # frontmatter-parser.ts — YAML frontmatter and Markdown body
 ├── analyzers/    # basic-skill-analyzer.ts — describes a skill
 ├── validators/   # basic-skill-validator.ts — platform-independent structural rules
 ├── targets/
 │   └── dsh/      # pinned DeepSeek Harness contract, invocation policy, compatibility validator
+├── ir/           # skill-ir.ts, normalize-skill.ts, serialize-skill-ir.ts, json-value.ts
 ├── schemas/      # skill.ts, validation.ts (generic), compatibility.ts (target)
 ├── utils/        # exit codes, skill-name rule, error types, package metadata
 ├── adapters/     # (empty) ecosystem adapters — future phase
 └── llm/          # (empty) model providers — future phase
-docs/             # dsh-compatibility-contract.md — pinned contract provenance and rules
+docs/             # dsh-compatibility-contract.md, skill-ir-v1.md
 tests/            # Vitest test suites
 fixtures/         # skills used by the tests, including deliberately broken ones
 ```
 
 The generic validator in `src/validators` stays platform-independent; everything
-specific to DeepSeek Harness lives under `src/targets/dsh`, so a future upstream
-change touches the target profile rather than the whole project.
+specific to DeepSeek Harness lives under `src/targets/dsh`, and the
+platform-neutral IR lives in `src/ir` with no target vocabulary at all, so a
+future upstream or adapter change touches one layer rather than the whole project.
 
 `src/adapters` and `src/llm` are reserved module boundaries. They contain no
 code, no interfaces and no placeholders; files are added when a phase implements
@@ -320,10 +382,12 @@ input**. `dsh-skill-forge` does not automatically execute anything from a
 third-party skill: no shell or PowerShell commands, no Python, no npm lifecycle
 scripts, no executables or binaries.
 
-All three commands only read: resources are enumerated and read, never run, and no
+All four commands only read: resources are enumerated and read, never run, and no
 input file is modified. `.gitattributes` pins text files to LF so a Windows
 checkout cannot rewrite them. `compat` additionally performs no network access —
-its contract is pinned at development time.
+its contract is pinned at development time. `normalize` writes nothing itself: it
+prints the IR to stdout and leaves redirection to the shell, so it never creates
+or overwrites a file, and it never rewrites the skill it reads.
 
 The fixtures under `fixtures/script-resources` contain real `.sh`, `.ps1`, `.py`
 and `.bat` files that each leave a marker file behind if executed; the test suite

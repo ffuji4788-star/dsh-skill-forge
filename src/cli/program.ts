@@ -1,10 +1,10 @@
 /**
  * Builds the `dsh-forge` command-line interface.
  *
- * Phase 3 registers exactly three commands: `analyze` describes a local skill,
- * `validate` checks its structure, and `compat` checks it against the pinned
- * DeepSeek Harness contract. No conversion, import or model-provider command
- * exists.
+ * Phase 4 registers exactly four commands: `analyze` describes a local skill,
+ * `validate` checks its structure, `compat` checks it against the pinned
+ * DeepSeek Harness contract, and `normalize` emits the canonical Universal Skill
+ * IR. No conversion, import or model-provider command exists.
  */
 import { Command } from 'commander';
 
@@ -12,6 +12,7 @@ import { EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-codes.js';
 import { describeNodeRequirement, readPackageInfo } from '../utils/package-info.js';
 import { runAnalyze } from './analyze-command.js';
 import { runCompat } from './compat-command.js';
+import { runNormalize } from './normalize-command.js';
 import { runValidate } from './validate-command.js';
 
 /**
@@ -25,8 +26,9 @@ const HELP_FOOTER_SECTIONS = [
   commands, scripts, executables or binaries from a third-party skill. Skill
   resources are enumerated and read, never run.`,
   `Status:
-  Phase 3 (local analysis, deterministic validation and pinned DeepSeek Harness
-  compatibility). \`analyze\`, \`validate\` and \`compat\` exist so far.`,
+  Phase 4 (local analysis, deterministic validation, pinned DeepSeek Harness
+  compatibility and canonical Universal Skill IR). \`analyze\`, \`validate\`,
+  \`compat\` and \`normalize\` exist so far.`,
 ];
 
 function buildEnvironmentSection(nodeRequirement: string | undefined): string {
@@ -71,9 +73,13 @@ export function stripOptionTerminator(argv: readonly string[]): string[] {
  * {@link stripOptionTerminator} first; `runCli` already does.
  *
  * @param writeOut Sink used by a command to print its report.
+ * @param writeErr Sink used by a command to print a problem message.
  * @returns A configured, not-yet-parsed Commander program.
  */
-export function createProgram(writeOut: (text: string) => void = () => {}): Command {
+export function createProgram(
+  writeOut: (text: string) => void = () => {},
+  writeErr: (text: string) => void = () => {},
+): Command {
   const packageInfo = readPackageInfo();
   const program = new Command();
 
@@ -144,6 +150,21 @@ export function createProgram(writeOut: (text: string) => void = () => {}): Comm
       // with warnings, is 0; an incompatible skill is a completed check that
       // failed, which is 2.
       process.exitCode = result.compatible ? EXIT_SUCCESS : EXIT_VALIDATION_FAILED;
+    });
+
+  program
+    .command('normalize')
+    .description('Emit the canonical Universal Skill IR v1 for a structurally valid local skill.')
+    .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
+    .usage('<path>')
+    .action((inputPath: string | undefined) => {
+      if (inputPath === undefined || inputPath.length === 0) {
+        program.error("error: missing required argument 'path'", { exitCode: 1 });
+        return;
+      }
+
+      // stdout carries the IR document only, so a redirect produces valid JSON.
+      process.exitCode = runNormalize(inputPath, { writeOut, writeErr });
     });
 
   return program;
