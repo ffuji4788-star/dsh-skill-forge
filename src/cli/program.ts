@@ -1,15 +1,17 @@
 /**
  * Builds the `dsh-forge` command-line interface.
  *
- * Phase 2 registers exactly two commands: `analyze` reads a local skill and
- * `validate` checks it deterministically. No conversion, compatibility
- * validation, import or model-provider command exists.
+ * Phase 3 registers exactly three commands: `analyze` describes a local skill,
+ * `validate` checks its structure, and `compat` checks it against the pinned
+ * DeepSeek Harness contract. No conversion, import or model-provider command
+ * exists.
  */
 import { Command } from 'commander';
 
 import { EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-codes.js';
 import { describeNodeRequirement, readPackageInfo } from '../utils/package-info.js';
 import { runAnalyze } from './analyze-command.js';
+import { runCompat } from './compat-command.js';
 import { runValidate } from './validate-command.js';
 
 /**
@@ -23,8 +25,8 @@ const HELP_FOOTER_SECTIONS = [
   commands, scripts, executables or binaries from a third-party skill. Skill
   resources are enumerated and read, never run.`,
   `Status:
-  Phase 2 (local skill analysis and deterministic validation). \`analyze\` and
-  \`validate\` exist so far.`,
+  Phase 3 (local analysis, deterministic validation and pinned DeepSeek Harness
+  compatibility). \`analyze\`, \`validate\` and \`compat\` exist so far.`,
 ];
 
 function buildEnvironmentSection(nodeRequirement: string | undefined): string {
@@ -120,6 +122,28 @@ export function createProgram(writeOut: (text: string) => void = () => {}): Comm
       // A completed validation is a normal outcome, so the report stays on
       // stdout; only the status code distinguishes pass from failure (2).
       process.exitCode = result.valid ? EXIT_SUCCESS : EXIT_VALIDATION_FAILED;
+    });
+
+  program
+    .command('compat')
+    .description(
+      'Check a local skill against the pinned DeepSeek Harness contract. Nothing is executed.',
+    )
+    .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
+    .usage('<path>')
+    .action((inputPath: string | undefined) => {
+      if (inputPath === undefined || inputPath.length === 0) {
+        program.error("error: missing required argument 'path'", { exitCode: 1 });
+        return;
+      }
+
+      const { report, result } = runCompat(inputPath);
+      writeOut(report);
+
+      // Compatibility reuses the existing semantics: passing, including passing
+      // with warnings, is 0; an incompatible skill is a completed check that
+      // failed, which is 2.
+      process.exitCode = result.compatible ? EXIT_SUCCESS : EXIT_VALIDATION_FAILED;
     });
 
   return program;

@@ -1,9 +1,10 @@
 /**
  * Public library entry point of `dsh-skill-forge`.
  *
- * Phase 2 exposes local skill reading, analysis and deterministic structural
- * validation. DSH compatibility validation, conversion, remote import, license
- * analysis and model providers are not implemented and are not exported.
+ * Phase 3 exposes local skill reading, analysis, deterministic structural
+ * validation and compatibility checking against a pinned DeepSeek Harness
+ * contract. Conversion, remote import, license analysis and model providers are
+ * not implemented and are not exported.
  */
 export {
   analyzeBasicSkill,
@@ -17,6 +18,12 @@ export {
   type RenderAnalysisOptions,
   type RunAnalyzeOptions,
 } from './cli/analyze-command.js';
+export {
+  renderCompatibility,
+  runCompat,
+  type RenderCompatibilityOptions,
+  type RunCompatOptions,
+} from './cli/compat-command.js';
 export { createProgram, stripOptionTerminator } from './cli/program.js';
 export { runCli, type RunOptions } from './cli/run.js';
 export {
@@ -41,6 +48,12 @@ export {
   type SkillFrontmatter,
 } from './parsers/frontmatter-parser.js';
 export { buildParsedSkill, type ParsedSkill, type ParsedSkillInput } from './schemas/skill.js';
+export type {
+  CompatibilityIssue,
+  CompatibilityResult,
+  CompatibilitySeverity,
+  CompatibilityStatus,
+} from './schemas/compatibility.js';
 export type {
   ValidationIssue,
   ValidationResult,
@@ -72,3 +85,26 @@ export {
   VALIDATION_CODES,
   validateBasicSkill,
 } from './validators/basic-skill-validator.js';
+export {
+  DSH_CONTRACT_SOURCES,
+  DSH_CONTRACT_VERIFIED_AT,
+  DSH_DISCOVERY_SHAPES,
+  DSH_KNOWN_FRONTMATTER_KEYS,
+  DSH_SKILL_NAME_PATTERN,
+  DSH_TARGET_ID,
+  DSH_TARGET_NAME,
+  DSH_UPSTREAM_COMMIT,
+  DSH_UPSTREAM_REPOSITORY,
+  dshUpstreamShortCommit,
+} from './targets/dsh/dsh-contract.js';
+export {
+  DSH_COMPATIBILITY_CODES,
+  validateDshCompatibility,
+} from './targets/dsh/dsh-compatibility-validator.js';
+export {
+  defaultDshInvocationPolicy,
+  parseDshFrontmatterBoolean,
+  resolveDshInvocationPolicy,
+  type DshInvocationPolicy,
+  type DshInvocationProblem,
+} from './targets/dsh/dsh-invocation-policy.js';
