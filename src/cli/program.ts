@@ -156,18 +156,42 @@ export function createProgram(
 
   program
     .command('normalize')
-    .description('Emit the canonical Universal Skill IR v1 for a structurally valid local skill.')
+    .description('Emit the canonical Universal Skill IR for a structurally valid local skill.')
     .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
     .usage('<path>')
-    .action((inputPath: string | undefined) => {
-      if (inputPath === undefined || inputPath.length === 0) {
-        program.error("error: missing required argument 'path'", { exitCode: 1 });
-        return;
-      }
+    .option('--ir-version <version>', 'IR schema version to emit; defaults to 1')
+    .option('--source <source>', 'Explicit source adapter; omit for the generic local path')
+    .action(
+      (inputPath: string | undefined, commandOptions: { irVersion?: string; source?: string }) => {
+        if (inputPath === undefined || inputPath.length === 0) {
+          program.error("error: missing required argument 'path'", { exitCode: 1 });
+          return;
+        }
 
-      // stdout carries the IR document only, so a redirect produces valid JSON.
-      process.exitCode = runNormalize(inputPath, { writeOut, writeErr });
-    });
+        // An explicit, non-numeric version is a usage error rather than a silent
+        // fallback to a default: guessing which schema a caller meant would produce
+        // a document they did not ask for.
+        let irVersion: number | undefined;
+        if (commandOptions.irVersion !== undefined) {
+          const parsed = Number(commandOptions.irVersion);
+          if (!Number.isInteger(parsed)) {
+            program.error(`error: option '--ir-version <version>' expects an integer`, {
+              exitCode: 1,
+            });
+            return;
+          }
+          irVersion = parsed;
+        }
+
+        // stdout carries the IR document only, so a redirect produces valid JSON.
+        process.exitCode = runNormalize(inputPath, {
+          writeOut,
+          writeErr,
+          ...(irVersion === undefined ? {} : { irVersion }),
+          ...(commandOptions.source === undefined ? {} : { source: commandOptions.source }),
+        });
+      },
+    );
 
   program
     .command('convert')

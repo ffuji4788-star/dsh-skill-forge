@@ -7,22 +7,22 @@ for use with DeepSeek Harness.
 
 The long-term goal is a skill conversion toolchain. **Local analysis, structural
 validation, pinned DeepSeek Harness compatibility checking, canonical Universal
-Skill IR normalization, safe DSH package conversion and an Agent Skills source
-adapter exist so far.**
+Skill IR (v1 and v2), safe DSH package conversion, an Agent Skills source adapter
+and portable package semantics exist so far.**
 
 ## Current status
 
-**Phase 6 / Agent Skills source adapter.**
+**Phase 7 / Universal Skill IR v2 + portable semantics.**
 
 Five commands exist, and they answer five different questions:
 
-| Command                                                                 | Question it answers                                                            |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `dsh-forge analyze <path>`                                              | What is in this skill?                                                         |
-| `dsh-forge validate <path>`                                             | Is the skill structurally sound?                                               |
-| `dsh-forge compat <path>`                                               | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
-| `dsh-forge normalize <path>`                                            | What is the canonical, platform-neutral representation of this skill?          |
-| `dsh-forge convert <path> [--source <source>] --target dsh --out <dir>` | What does this skill look like as a DeepSeek Harness package?                  |
+| Command                                                              | Question it answers                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `dsh-forge analyze <path>`                                           | What is in this skill?                                                         |
+| `dsh-forge validate <path>`                                          | Is the skill structurally sound?                                               |
+| `dsh-forge compat <path>`                                            | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
+| `dsh-forge normalize <path> [--source <src>] [--ir-version <1\|2>]`  | What is the canonical, platform-neutral representation of this skill?          |
+| `dsh-forge convert <path> [--source <src>] --target dsh --out <dir>` | What does this skill look like as a DeepSeek Harness package?                  |
 
 Anything the tool cannot carry faithfully, it refuses rather than dropping.
 Nothing is imported from the network, sent to a model, or executed.
@@ -234,16 +234,31 @@ results describe.
 ### Normalizing a skill to Universal Skill IR
 
 ```bash
-dsh-forge normalize <path>
+dsh-forge normalize <path> [--source <source>] [--ir-version <1|2>]
 ```
 
-`normalize` emits the canonical, platform-neutral **Universal Skill IR v1** for a
+`normalize` emits the canonical, platform-neutral **Universal Skill IR** for a
 skill that already passes generic structural validation. stdout carries the JSON
 document and nothing else, so it can be redirected straight to a file:
 
 ```bash
 dsh-forge normalize ./my-skill > my-skill.ir.json
 ```
+
+**IR v1 is the default and is frozen.** Omitting `--ir-version` produces
+byte-identical output to every earlier release. IR v2 appears only when asked for:
+
+```bash
+# v2 for a generic skill: no source contract, so semantics stays empty
+dsh-forge normalize ./my-skill --ir-version 2
+
+# v2 for an Agent Skill: portable semantics are lifted out of the envelope
+dsh-forge normalize ./my-skill --source agent-skills --ir-version 2
+```
+
+Naming a source never changes the version on its own, and an unknown version (for
+example `--ir-version 3`) or a non-numeric one is refused rather than silently
+defaulted. There is no `latest`.
 
 Example output:
 
@@ -285,7 +300,7 @@ $ dsh-forge normalize fixtures/dsh/whitespace-description # exit 2, refused
 dsh-forge convert ./my-skill --target dsh --out ./generated/my-skill
 ```
 
-Phase 5 performs **lossless conversion from Universal Skill IR v1 to the pinned
+Phase 5 performs **lossless conversion from the Universal Skill IR to the pinned
 DSH target contract** (`deepseek-ai/deepseek-harness@5badb15009ae`). It writes a
 directory containing `SKILL.md` and the skill's resources:
 
@@ -306,13 +321,47 @@ Files: 1
 
 Two rules matter most:
 
-- **If un-interpreted `source.extraFrontmatter` is present, conversion is
-  refused** rather than silently dropping it. A source key such as `author`,
-  `version`, `metadata`, `whenToUse` or `disable-model-invocation` has no mapping
-  yet, so the tool stops and lists it instead of guessing. There is deliberately
-  no `--allow-lossy` or `--force` flag.
+- **If a source field cannot be carried faithfully, conversion is refused** rather
+  than silently dropping it. A field with no target counterpart is reported, with
+  the reason distinguishing the two cases:
+  - `UNSUPPORTED_TARGET_SEMANTIC` — the tool _interpreted_ the field (`license`,
+    `compatibility`) but this target has nowhere to put it;
+  - `UNMAPPED_SOURCE_FRONTMATTER` — the field is still raw source data with no
+    interpretation and no home (`allowed-tools`, or any key the generic path read).
+
+  There is deliberately no `--allow-lossy` or `--force` flag.
+
 - **Existing output directories are never overwritten.** If `--out` already
   exists, the conversion is refused and the existing path is left untouched.
+
+### What converts today
+
+Conversion builds IR v2 internally, so a field the source adapter interpreted can
+be mapped instead of refused. For an Agent Skill that means:
+
+| Agent Skills field                     | Result                                                                  |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| `name`, `description`, body, resources | converted                                                               |
+| `metadata`                             | **converted** — `metadata` is carried into the DSH frontmatter verbatim |
+| `license`                              | refused: `UNSUPPORTED_TARGET_SEMANTIC`                                  |
+| `compatibility`                        | refused: `UNSUPPORTED_TARGET_SEMANTIC`                                  |
+| `allowed-tools`                        | refused: `UNMAPPED_SOURCE_FRONTMATTER`                                  |
+
+```bash
+# An Agent Skill whose only optional field is metadata: this converts.
+dsh-forge convert ./my-agent-skill --source agent-skills --target dsh --out ./generated/my-skill
+```
+
+`metadata` maps because the pinned DSH target only ever _carries_ it: routing uses
+`whenToUse` and `description`, invocation uses dedicated keys, and no component
+reads inside the object. The evidence is recorded in
+[docs/skill-ir-v2.md](./docs/skill-ir-v2.md).
+
+`license` and `compatibility` have no DSH field, and folding either into
+`description`, the body or `metadata` would invent a meaning the source never
+stated — so they are refused rather than approximated. `allowed-tools` is an
+experimental tool vocabulary, not a portable package semantic, so it is never
+promoted at all.
 
 The package is written to a staging directory beside the output and fully
 re-validated — generic validation plus pinned DSH compatibility — before being
@@ -321,7 +370,8 @@ copied byte-for-byte and are never executed; symbolic links and other special
 files are refused, and paths that would not be portable to a Windows target are
 refused too.
 
-Full rules: [docs/dsh-target-adapter.md](./docs/dsh-target-adapter.md).
+Full rules: [docs/dsh-target-adapter.md](./docs/dsh-target-adapter.md) and
+[docs/skill-ir-v2.md](./docs/skill-ir-v2.md).
 
 `content is preserved; filesystem metadata preservation is limited.` Timestamps,
 ownership, ACLs and POSIX modes are not part of the conversion contract.
@@ -407,7 +457,8 @@ None of the following exists, not even as a stub:
 - A source or target adapter registry, or any target other than `dsh`
 - Automatic migration
 - GitHub import
-- License analysis or rewriting
+- License analysis, SPDX resolution, or compatibility parsing
+- Tool-permission translation
 - Provenance analysis
 - DeepSeek or any other LLM provider integration
 - AI-assisted rewriting
@@ -422,9 +473,12 @@ detection. `compat` reports whether the **pinned** DeepSeek Harness implementati
 would accept a skill — it makes no claim about future upstream revisions.
 `normalize` produces a canonical representation only, and writes nothing.
 
-Universal Skill IR v1 does **not** mean universal skill semantic equivalence — it
-is a stable canonical representation, not a completed mapping of every platform's
-vocabulary. See [docs/skill-ir-v1.md](./docs/skill-ir-v1.md).
+Neither IR version means universal skill semantic equivalence. v1 is a stable
+canonical representation with no interpreted vocabulary; v2 adds a small, curated
+set of portable fields, each with recorded evidence. Neither is a completed
+mapping of every platform's vocabulary. See
+[docs/skill-ir-v1.md](./docs/skill-ir-v1.md) and
+[docs/skill-ir-v2.md](./docs/skill-ir-v2.md).
 
 ## Project layout
 
@@ -439,14 +493,15 @@ src/
 │   └── agent-skills/  # pinned Agent Skills contract, source validator, source adapter
 ├── targets/
 │   └── dsh/      # pinned contract, invocation policy, compatibility validator, target adapter
-├── ir/           # skill-ir.ts, normalize-skill.ts, serialize-skill-ir.ts, json-value.ts
+├── ir/           # skill-ir.ts (v1, frozen), skill-ir-v2.ts, portable-semantics.ts,
+│                 # normalize-skill.ts, normalize-skill-v2.ts, serializers, json-value.ts
 ├── conversion/   # source-adapter.ts, convert-skill.ts, resource-collector.ts
 ├── schemas/      # skill.ts, validation.ts, compatibility.ts, conversion.ts
 ├── utils/        # exit codes, skill-name rule, path boundary, error types, package metadata
 ├── adapters/     # (empty) further ecosystem adapters — future phase
 └── llm/          # (empty) model providers — future phase
-docs/             # dsh-compatibility-contract.md, skill-ir-v1.md, dsh-target-adapter.md,
-                  # agent-skills-source-contract.md
+docs/             # dsh-compatibility-contract.md, skill-ir-v1.md, skill-ir-v2.md,
+                  # dsh-target-adapter.md, agent-skills-source-contract.md
 tests/            # Vitest test suites
 fixtures/         # skills used by the tests, including deliberately broken ones
 ```

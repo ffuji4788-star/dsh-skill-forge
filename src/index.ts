@@ -57,6 +57,37 @@ export {
 } from './targets/dsh/dsh-target-adapter.js';
 export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
 export {
+  PORTABLE_SEMANTIC_FIELDS,
+  toSerializedSemantics,
+  validatePortableSemantics,
+  type PortableSemantics,
+  type SemanticsProblem,
+  type SerializedSemantics,
+} from './ir/portable-semantics.js';
+export {
+  AGENT_SKILLS_FORMAT,
+  GENERIC_LOCAL_SKILL_FORMAT as GENERIC_LOCAL_FORMAT_V2,
+  KNOWN_V2_SOURCE_FORMATS,
+  SKILL_IR_V2_SCHEMA_VERSION,
+  validateSkillIRV2,
+  type SkillIRV2,
+  type SkillIRV2Source,
+} from './ir/skill-ir-v2.js';
+export { GENERIC_PROVENANCE, toSkillIRV2, type SourceProvenance } from './ir/normalize-skill-v2.js';
+export { serializeSkillIRV2 } from './ir/serialize-skill-ir-v2.js';
+export {
+  DEFAULT_IR_VERSION,
+  SUPPORTED_IR_VERSIONS,
+  type RunNormalizeOptions as RunNormalizeOptionsV2,
+} from './cli/normalize-command.js';
+export {
+  renderDshEntry,
+  renderDshSkillMarkdownV2,
+  toDshEmitExtras,
+  unsupportedDshSemantics,
+  type DshEmitExtras,
+} from './targets/dsh/dsh-target-adapter.js';
+export {
   AGENT_SKILLS_ALLOWED_FIELDS,
   AGENT_SKILLS_CONTRACT_SOURCES,
   AGENT_SKILLS_ENTRY_NAMES,
@@ -82,6 +113,7 @@ export {
 export {
   AGENT_SKILLS_PACKAGE_CODES,
   findAgentSkillEntry,
+  liftAgentSkillSemantics,
   loadAgentSkill,
 } from './sources/agent-skills/agent-skills-source-adapter.js';
 export {

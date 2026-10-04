@@ -30,7 +30,9 @@ import {
   type ConversionIssue,
   type ConversionResult,
 } from '../schemas/conversion.js';
-import { toSkillIR } from '../ir/normalize-skill.js';
+import { toSkillIRV2, type SourceProvenance } from '../ir/normalize-skill-v2.js';
+import { SkillIRError } from '../ir/normalize-skill.js';
+import { GENERIC_LOCAL_SKILL_FORMAT, type SkillIRV2 } from '../ir/skill-ir-v2.js';
 import { validateDshCompatibility } from '../targets/dsh/dsh-compatibility-validator.js';
 import {
   DSH_CONTRACT_VERIFIED_AT,
@@ -38,7 +40,10 @@ import {
   DSH_UPSTREAM_COMMIT,
   DSH_UPSTREAM_REPOSITORY,
 } from '../targets/dsh/dsh-contract.js';
-import { renderDshSkillMarkdown } from '../targets/dsh/dsh-target-adapter.js';
+import {
+  renderDshSkillMarkdownV2,
+  unsupportedDshSemantics,
+} from '../targets/dsh/dsh-target-adapter.js';
 import { agentSkillsUpstreamReference } from '../sources/agent-skills/agent-skills-contract.js';
 import { loadLocalSkill } from '../importers/local-importer.js';
 import { validateBasicSkill } from '../validators/basic-skill-validator.js';
@@ -230,7 +235,7 @@ export function convertSkillToTarget(
   }
 
   // The generic validation gate is still applied after the source contract: a
-  // skill can satisfy its own source and still be outside what IR v1 can
+  // skill can satisfy its own source and still be outside what the IR can
   // represent (a source-valid Unicode name, for example). That is reported
   // distinctly so it is never mistaken for a source adapter defect.
   const validation = validateBasicSkill(skill);
@@ -239,7 +244,7 @@ export function convertSkillToTarget(
       return refusal(resolvedBase, [
         error(
           SOURCE_CODES.sourceValidIrUnsupported,
-          `The skill satisfies the ${options.source} source contract but cannot be represented as Universal Skill IR v1. This is not a source adapter defect.`,
+          `The skill satisfies the ${options.source} source contract but cannot be represented as Universal Skill IR. This is not a source adapter defect.`,
           validation.errors.map((issue) => `${issue.code}: ${issue.message}`),
         ),
       ]);
@@ -253,7 +258,33 @@ export function convertSkillToTarget(
     );
   }
 
-  const ir = toSkillIR(skill, sourceRoot);
+  // Conversion builds IR v2 internally. A source that offers no portable
+  // semantics produces an empty `semantics`, which emits exactly the same
+  // frontmatter v1 did, so the generic path stays byte-compatible.
+  const provenance: SourceProvenance = {
+    format: loaded.format ?? GENERIC_LOCAL_SKILL_FORMAT,
+    ...(loaded.semantics === undefined ? {} : { semantics: loaded.semantics }),
+  };
+
+  let ir: SkillIRV2;
+  try {
+    ir = toSkillIRV2(skill, provenance, sourceRoot);
+  } catch (thrown) {
+    // A value that cannot be represented in canonical IR — an unsafe JSON key
+    // such as `__proto__`, or a non-JSON value — is valid source the IR cannot
+    // carry. That is a deterministic refusal, not a crash: the caller did nothing
+    // wrong, and dropping the value silently would be worse than refusing.
+    if (thrown instanceof SkillIRError) {
+      return refusal(resolvedBase, [
+        error(
+          CONVERSION_CODES.unrepresentableIrValue,
+          'A source value cannot be represented in the Universal Skill IR, so conversion is refused rather than dropping it',
+          thrown.problems,
+        ),
+      ]);
+    }
+    throw thrown;
+  }
 
   // Lossless or refused: uninterpreted source frontmatter has no mapping yet.
   const unmappedKeys = Object.keys(ir.source.extraFrontmatter);
@@ -267,12 +298,26 @@ export function convertSkillToTarget(
     ]);
   }
 
+  // Portable semantics the source *did* interpret but this target cannot express
+  // are a different refusal from raw source data: the meaning is known, and it
+  // simply has no counterpart here. Dropping or reinterpreting it would be a lie.
+  const unsupportedSemantics = unsupportedDshSemantics(ir.semantics);
+  if (unsupportedSemantics.length > 0) {
+    return refusal(resolvedBase, [
+      error(
+        CONVERSION_CODES.unsupportedTargetSemantic,
+        'Semantics were interpreted by the source but have no mapping in this target, so conversion is refused rather than dropping or reinterpreting them',
+        unsupportedSemantics,
+      ),
+    ]);
+  }
+
   const collected = collectResources(ir.resources, sourceRoot);
   if (collected.issues.length > 0) {
     return refusal(resolvedBase, collected.issues);
   }
 
-  const entry = renderDshSkillMarkdown(ir);
+  const entry = renderDshSkillMarkdownV2(ir);
   const plannedPaths = [
     entry.path,
     ...collected.nodes.filter((node) => node.kind === 'file').map((node) => node.destination),

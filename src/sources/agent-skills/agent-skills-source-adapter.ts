@@ -27,7 +27,9 @@ import {
   statOrThrow,
   toRelativePosixPath,
 } from '../../importers/skill-files.js';
-import { parseFrontmatter } from '../../parsers/frontmatter-parser.js';
+import type { PortableSemantics } from '../../ir/portable-semantics.js';
+import { AGENT_SKILLS_FORMAT } from '../../ir/skill-ir-v2.js';
+import { parseFrontmatter, type SkillFrontmatter } from '../../parsers/frontmatter-parser.js';
 import { buildParsedSkill, type ParsedSkill } from '../../schemas/skill.js';
 import type {
   SourceFailure,
@@ -43,6 +45,54 @@ export const AGENT_SKILLS_PACKAGE_CODES = {
   shapeInvalid: 'SOURCE_PACKAGE_SHAPE_INVALID',
   missingEntry: 'SOURCE_PACKAGE_MISSING_ENTRY',
 } as const;
+
+/**
+ * Lifts the portable subset of Agent Skills frontmatter into semantics.
+ *
+ * Only `license`, `compatibility` and `metadata` are promoted, and only because
+ * their meaning as *package-level declarative information* is established by the
+ * specification and their target counterpart carries the same kind of fact — see
+ * `docs/skill-ir-v2.md` for the evidence.
+ *
+ * `allowed-tools` is deliberately **not** promoted. It is an experimental
+ * pre-approved-tool vocabulary, and a tool-permission list is not the same kind
+ * of fact as a license or a metadata pair. Leaving it in the source envelope
+ * keeps it visible and keeps any target from mistaking it for invocation or
+ * permission semantics.
+ *
+ * Values are copied exactly as validated: never trimmed, lowercased, renamed or
+ * coerced. A field that is absent stays absent rather than becoming null or an
+ * empty string.
+ *
+ * @param frontmatter Frontmatter that already passed {@link validateAgentSkillFrontmatter}.
+ * @returns The portable semantics, possibly empty.
+ */
+export function liftAgentSkillSemantics(frontmatter: SkillFrontmatter): PortableSemantics {
+  const semantics: {
+    license?: string;
+    compatibility?: string;
+    metadata?: Readonly<Record<string, string>>;
+  } = {};
+
+  const license = frontmatter['license'];
+  if (typeof license === 'string') {
+    semantics.license = license;
+  }
+
+  const compatibility = frontmatter['compatibility'];
+  if (typeof compatibility === 'string') {
+    semantics.compatibility = compatibility;
+  }
+
+  const metadata = frontmatter['metadata'];
+  if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
+    // The source contract above already proved every value is a string, so this
+    // is a copy rather than a coercion.
+    semantics.metadata = { ...(metadata as Record<string, string>) };
+  }
+
+  return semantics;
+}
 
 function failure(
   source: string,
@@ -174,5 +224,7 @@ export function loadAgentSkill(inputPath: string, cwd: string): SourceLoadResult
     selection: 'explicit',
     skill,
     sourceRoot: resolved,
+    format: AGENT_SKILLS_FORMAT,
+    semantics: liftAgentSkillSemantics(frontmatter),
   };
 }

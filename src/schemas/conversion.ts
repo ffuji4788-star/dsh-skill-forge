@@ -19,9 +19,11 @@ export interface ConversionIssue {
   readonly details?: readonly string[];
 }
 
-/** Codes emitted by the Phase 5 conversion pipeline. */
+/** Codes emitted by the conversion pipeline. */
 export const CONVERSION_CODES = {
   unmappedSourceFrontmatter: 'UNMAPPED_SOURCE_FRONTMATTER',
+  unsupportedTargetSemantic: 'UNSUPPORTED_TARGET_SEMANTIC',
+  unrepresentableIrValue: 'UNREPRESENTABLE_IR_VALUE',
   unsupportedResource: 'UNSUPPORTED_RESOURCE',
   duplicateResourceDestination: 'DUPLICATE_RESOURCE_DESTINATION',
   caseCollision: 'CASE_COLLISION',

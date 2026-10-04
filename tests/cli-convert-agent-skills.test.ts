@@ -213,17 +213,64 @@ describe('Agent Skills to DSH', () => {
   });
 });
 
-describe('optional source semantics refuse target conversion', () => {
+describe('optional source semantics and the target', () => {
+  // Phase 7 lifted license/compatibility/metadata into portable semantics, so the
+  // refusal for a *known* semantic is now UNSUPPORTED_TARGET_SEMANTIC rather than
+  // UNMAPPED_SOURCE_FRONTMATTER. The distinction is deliberate: the meaning is
+  // known, and this target simply has no field for it.
   it.each([
     ['license', 'with-license', 'license'],
     ['compatibility', 'with-compatibility-check', 'compatibility'],
-    ['metadata', 'with-metadata-check', 'metadata'],
-    ['allowed-tools', 'with-allowed-tools-check', 'allowed-tools'],
-  ])('refuses %s rather than dropping or guessing it', async (_label, fixture, field) => {
+  ])(
+    'refuses %s with UNSUPPORTED_TARGET_SEMANTIC rather than dropping it',
+    async (_label, fixture, field) => {
+      const out = path.join(temporaryRoot(), 'generated');
+      const { exitCode, stdout, stderr } = await run(
+        'convert',
+        `fixtures/sources/agent-skills/${fixture}`,
+        '--source',
+        'agent-skills',
+        '--target',
+        'dsh',
+        '--out',
+        out,
+      );
+
+      expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
+      expect(stderr).toBe('');
+      expect(stdout).toContain(CONVERSION_CODES.unsupportedTargetSemantic);
+      expect(stdout).toContain(`- ${field}`);
+      expect(stdout).toContain('No output was created.');
+      expect(existsSync(out)).toBe(false);
+    },
+  );
+
+  it('converts a metadata-only Agent Skill and preserves its metadata', async () => {
     const out = path.join(temporaryRoot(), 'generated');
     const { exitCode, stdout, stderr } = await run(
       'convert',
-      `fixtures/sources/agent-skills/${fixture}`,
+      'fixtures/sources/agent-skills/with-metadata-check',
+      '--source',
+      'agent-skills',
+      '--target',
+      'dsh',
+      '--out',
+      out,
+    );
+
+    expect(exitCode).toBe(EXIT_SUCCESS);
+    expect(stderr).toBe('');
+    expect(stdout).toContain('Result: SUCCESS');
+    expect(existsSync(path.join(out, 'SKILL.md'))).toBe(true);
+  });
+
+  it('refuses allowed-tools as unmapped source data, not as a target semantic', async () => {
+    // allowed-tools is never promoted: it is an experimental tool vocabulary,
+    // not a portable package semantic, so it stays raw source data.
+    const out = path.join(temporaryRoot(), 'generated');
+    const { exitCode, stdout } = await run(
+      'convert',
+      'fixtures/sources/agent-skills/with-allowed-tools-check',
       '--source',
       'agent-skills',
       '--target',
@@ -233,14 +280,13 @@ describe('optional source semantics refuse target conversion', () => {
     );
 
     expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
-    expect(stderr).toBe('');
     expect(stdout).toContain(CONVERSION_CODES.unmappedSourceFrontmatter);
-    expect(stdout).toContain(`- ${field}`);
-    expect(stdout).toContain('No output was created.');
+    expect(stdout).not.toContain(CONVERSION_CODES.unsupportedTargetSemantic);
+    expect(stdout).toContain('- allowed-tools');
     expect(existsSync(out)).toBe(false);
   });
 
-  it('refuses a skill that declares every optional field at once', async () => {
+  it('refuses a skill declaring every optional field, naming the unmapped source field', async () => {
     const out = path.join(temporaryRoot(), 'generated');
     const { exitCode, stdout } = await run(
       'convert',
@@ -254,10 +300,10 @@ describe('optional source semantics refuse target conversion', () => {
     );
 
     expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
+    // Unmapped source data is reported first: until every source field has a
+    // home, the target's own semantic gaps are not yet the blocking question.
+    expect(stdout).toContain(CONVERSION_CODES.unmappedSourceFrontmatter);
     expect(stdout).toContain('- allowed-tools');
-    expect(stdout).toContain('- compatibility');
-    expect(stdout).toContain('- license');
-    expect(stdout).toContain('- metadata');
     expect(existsSync(out)).toBe(false);
   });
 });

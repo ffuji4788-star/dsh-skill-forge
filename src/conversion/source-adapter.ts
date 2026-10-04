@@ -12,6 +12,7 @@
 import path from 'node:path';
 
 import { loadLocalSkill } from '../importers/local-importer.js';
+import type { PortableSemantics } from '../ir/portable-semantics.js';
 import type { ParsedSkill } from '../schemas/skill.js';
 import { loadAgentSkill } from '../sources/agent-skills/agent-skills-source-adapter.js';
 import { AGENT_SKILLS_SOURCE_ID } from '../sources/agent-skills/agent-skills-contract.js';
@@ -63,6 +64,23 @@ export interface SourceSuccess {
   readonly skill: ParsedSkill;
   /** Absolute skill root directory. */
   readonly sourceRoot: string;
+  /**
+   * `source.format` provenance for IR v2, for example `agent-skills`.
+   *
+   * Paired with {@link semantics}. The generic local path leaves both unset,
+   * which is what keeps its IR v2 output identical to v1: with nothing handed in,
+   * no frontmatter key is ever promoted out of the source envelope.
+   */
+  readonly format?: string;
+  /**
+   * Portable semantics the adapter interpreted from its own vocabulary.
+   *
+   * Only a source adapter that has actually validated a field against a contract
+   * may fill this in. A key whose name merely resembles a target field is never
+   * promoted here — interpreting a vocabulary is the adapter's job, and the IR
+   * layer refuses to guess.
+   */
+  readonly semantics?: PortableSemantics;
 }
 
 export type SourceLoadResult = SourceSuccess | SourceFailure;
