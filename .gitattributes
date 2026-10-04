@@ -1,0 +1,22 @@
+# Line ending policy.
+#
+# Prettier is configured with `endOfLine: lf`, so the repository stores text as
+# LF and a Windows checkout must not rewrite it to CRLF. Without this file, a
+# global `core.autocrlf=true` (common on Windows) would convert these files on
+# checkout and `pnpm format:check` would then fail.
+* text=auto eol=lf
+
+# Files that must never be normalized. None are present today; the declarations
+# keep a future binary asset from being treated as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.mp3 binary
+*.wav binary
+*.mp4 binary
