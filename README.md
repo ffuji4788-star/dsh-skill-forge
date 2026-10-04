@@ -7,21 +7,22 @@ for use with DeepSeek Harness.
 
 The long-term goal is a skill conversion toolchain. **Local analysis, structural
 validation, pinned DeepSeek Harness compatibility checking, canonical Universal
-Skill IR normalization and safe DSH package conversion exist so far.**
+Skill IR normalization, safe DSH package conversion and an Agent Skills source
+adapter exist so far.**
 
 ## Current status
 
-**Phase 5 / DSH Target Adapter.**
+**Phase 6 / Agent Skills source adapter.**
 
 Five commands exist, and they answer five different questions:
 
-| Command                                             | Question it answers                                                            |
-| --------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `dsh-forge analyze <path>`                          | What is in this skill?                                                         |
-| `dsh-forge validate <path>`                         | Is the skill structurally sound?                                               |
-| `dsh-forge compat <path>`                           | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
-| `dsh-forge normalize <path>`                        | What is the canonical, platform-neutral representation of this skill?          |
-| `dsh-forge convert <path> --target dsh --out <dir>` | What does this skill look like as a DeepSeek Harness package?                  |
+| Command                                                                 | Question it answers                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `dsh-forge analyze <path>`                                              | What is in this skill?                                                         |
+| `dsh-forge validate <path>`                                             | Is the skill structurally sound?                                               |
+| `dsh-forge compat <path>`                                               | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
+| `dsh-forge normalize <path>`                                            | What is the canonical, platform-neutral representation of this skill?          |
+| `dsh-forge convert <path> [--source <source>] --target dsh --out <dir>` | What does this skill look like as a DeepSeek Harness package?                  |
 
 Anything the tool cannot carry faithfully, it refuses rather than dropping.
 Nothing is imported from the network, sent to a model, or executed.
@@ -44,6 +45,7 @@ pnpm dev -- validate fixtures/validate-valid
 pnpm dev -- compat fixtures/dsh/compatible-minimal
 pnpm dev -- normalize fixtures/normalize/minimal
 pnpm dev -- convert fixtures/convert/minimal --target dsh --out ./generated/minimal
+pnpm dev -- convert fixtures/sources/agent-skills/pdf-processing --source agent-skills --target dsh --out ./generated/pdf
 ```
 
 All five commands accept the same kinds of path:
@@ -324,6 +326,50 @@ Full rules: [docs/dsh-target-adapter.md](./docs/dsh-target-adapter.md).
 `content is preserved; filesystem metadata preservation is limited.` Timestamps,
 ownership, ACLs and POSIX modes are not part of the conversion contract.
 
+### Agent Skills source
+
+A standard [Agent Skills](https://agentskills.io) package can be read explicitly:
+
+```bash
+dsh-forge convert ./my-agent-skill \
+  --source agent-skills \
+  --target dsh \
+  --out ./generated/my-skill
+```
+
+`--source` is an explicit opt-in. Omitting it keeps the generic local path, and
+the source is **never** guessed from a directory's contents — a skill that looks
+like an Agent Skill is still read generically unless you say otherwise.
+
+The source contract is pinned to `agentskills/agentskills@69ef37e9424c` and is
+verified against the specification, its reference validator, and Anthropic's
+public implementation as secondary evidence. A package must be a directory whose
+entry is `SKILL.md` (then `skill.md`); a bare Markdown file is refused rather than
+silently read as something else.
+
+**Currently supported lossless subset: `name`, `description`, `instructions` and
+`resources`.**
+
+The optional Agent Skills fields — `license`, `compatibility`, `metadata` and
+`allowed-tools` — are validated and preserved verbatim in the IR's
+`source.extraFrontmatter`, but **conversion to DSH is currently refused** with
+`UNMAPPED_SOURCE_FRONTMATTER` rather than dropping or guessing them. Mapping
+`compatibility` onto a DSH field, or assuming a source `metadata` key means what a
+same-named DSH key means, would be a guess; that mapping needs a later phase. A
+skill therefore converts when its frontmatter is exactly `name` and `description`.
+
+Source validation and generic IR validation are separate, and they can disagree. A
+name like `数据处理` is a valid Agent Skills name but is outside what Universal
+Skill IR v1 can represent; that case is reported as
+`SOURCE_VALID_BUT_IR_UNSUPPORTED` and states that it is not a source adapter
+defect.
+
+Full rules, including every documented divergence between the standard, its
+reference validator and Anthropic's helper: [docs/agent-skills-source-contract.md](./docs/agent-skills-source-contract.md).
+
+This is **not** a claim that every Claude skill converts automatically. There is
+one source adapter, no adapter registry, and no automatic detection.
+
 ### Exit codes
 
 | Code | Meaning                                                                                                                                                                                                                           |
@@ -337,12 +383,15 @@ report is written to stdout with a non-zero code. `normalize` writes nothing to
 stdout when it refuses, so a redirect never produces a half-written document. A
 fatal error is written to stderr. A malformed frontmatter block is always fatal
 (`1`) and is never reported as a validation or compatibility issue, because the
-skill could not be read in the first place.
+skill could not be read in the first place. A source contract violation — an
+unknown frontmatter field, a name/directory mismatch — is a deterministic refusal
+(`2`), not a crash.
 
 `pnpm build` compiles TypeScript to `dist/`, producing a runnable CLI:
 
 ```bash
-node dist/src/cli/index.js convert fixtures/convert/minimal --target dsh --out ./generated/minimal
+node dist/src/cli/index.js convert fixtures/sources/agent-skills/pdf-processing \
+  --source agent-skills --target dsh --out ./generated/pdf
 # or, after `pnpm link` / a global install, the `dsh-forge` binary
 ```
 
@@ -366,11 +415,12 @@ None of the following exists, not even as a stub:
 - Web UI
 
 `import` and `install` do not exist, so passing them returns an unknown-command
-error. `convert` supports exactly one target (`--target dsh`); there is no Claude,
-Codex or OpenCode conversion. `compat` reports whether the **pinned** DeepSeek
-Harness implementation would accept a skill — it makes no claim about future
-upstream revisions. `normalize` produces a canonical representation only, and
-writes nothing.
+error. `convert` supports exactly one target (`--target dsh`) and explicitly
+selects at most one source (`--source agent-skills` or `--source generic-local`);
+there is no Claude, Codex or OpenCode conversion, and no automatic source
+detection. `compat` reports whether the **pinned** DeepSeek Harness implementation
+would accept a skill — it makes no claim about future upstream revisions.
+`normalize` produces a canonical representation only, and writes nothing.
 
 Universal Skill IR v1 does **not** mean universal skill semantic equivalence — it
 is a stable canonical representation, not a completed mapping of every platform's
@@ -381,22 +431,22 @@ vocabulary. See [docs/skill-ir-v1.md](./docs/skill-ir-v1.md).
 ```text
 src/
 ├── cli/          # entry point, program definition, run loop, and the five commands
-├── importers/    # local-importer.ts — reads a skill from disk
+├── importers/    # local-importer.ts, skill-files.ts — reads a skill from disk
 ├── parsers/      # frontmatter-parser.ts — YAML frontmatter and Markdown body
 ├── analyzers/    # basic-skill-analyzer.ts — describes a skill
 ├── validators/   # basic-skill-validator.ts — platform-independent structural rules
-├── targets/
-│   └── dsh/      # pinned DeepSeek Harness contract, invocation policy, compatibility validator
-├── ir/           # skill-ir.ts, normalize-skill.ts, serialize-skill-ir.ts, json-value.ts
+├── sources/
+│   └── agent-skills/  # pinned Agent Skills contract, source validator, source adapter
 ├── targets/
 │   └── dsh/      # pinned contract, invocation policy, compatibility validator, target adapter
 ├── ir/           # skill-ir.ts, normalize-skill.ts, serialize-skill-ir.ts, json-value.ts
-├── conversion/   # convert-skill.ts, resource-collector.ts — IR to target package
+├── conversion/   # source-adapter.ts, convert-skill.ts, resource-collector.ts
 ├── schemas/      # skill.ts, validation.ts, compatibility.ts, conversion.ts
 ├── utils/        # exit codes, skill-name rule, path boundary, error types, package metadata
-├── adapters/     # (empty) ecosystem adapters — future phase
+├── adapters/     # (empty) further ecosystem adapters — future phase
 └── llm/          # (empty) model providers — future phase
-docs/             # dsh-compatibility-contract.md, skill-ir-v1.md, dsh-target-adapter.md
+docs/             # dsh-compatibility-contract.md, skill-ir-v1.md, dsh-target-adapter.md,
+                  # agent-skills-source-contract.md
 tests/            # Vitest test suites
 fixtures/         # skills used by the tests, including deliberately broken ones
 ```
@@ -444,6 +494,12 @@ directory and the requested output directory — never into the source skill. It
 refuses an existing output path, never overwrites, copies resources byte-for-byte
 without executing them, and leaves no partial package behind if anything fails.
 It performs no network access.
+
+Reading an Agent Skill is not different in kind: the source adapter only reads,
+parses, validates and adapts. `scripts/`, `references/` and `assets/` are
+enumerated and copied, and a script in an Agent Skills package is never run. The
+Agent Skills contract itself is pinned at development time, so selecting
+`--source agent-skills` still performs no network access.
 
 The fixtures under `fixtures/script-resources` contain real `.sh`, `.ps1`, `.py`
 and `.bat` files that each leave a marker file behind if executed; the test suite

@@ -30,8 +30,7 @@ import {
   type ConversionIssue,
   type ConversionResult,
 } from '../schemas/conversion.js';
-import { normalizeSkill } from '../ir/normalize-skill.js';
-import type { SkillIR } from '../ir/skill-ir.js';
+import { toSkillIR } from '../ir/normalize-skill.js';
 import { validateDshCompatibility } from '../targets/dsh/dsh-compatibility-validator.js';
 import {
   DSH_CONTRACT_VERIFIED_AT,
@@ -40,13 +39,19 @@ import {
   DSH_UPSTREAM_REPOSITORY,
 } from '../targets/dsh/dsh-contract.js';
 import { renderDshSkillMarkdown } from '../targets/dsh/dsh-target-adapter.js';
+import { agentSkillsUpstreamReference } from '../sources/agent-skills/agent-skills-contract.js';
 import { loadLocalSkill } from '../importers/local-importer.js';
 import { validateBasicSkill } from '../validators/basic-skill-validator.js';
-import { SkillNotNormalizableError } from '../ir/normalize-skill.js';
 import { isAtOrBelow, isPathWithin } from '../utils/path-boundary.js';
 import { collectResources } from './resource-collector.js';
+import {
+  GENERIC_LOCAL_SOURCE_ID,
+  loadSourceSkill,
+  SOURCE_CODES,
+  type SourceIssue,
+} from './source-adapter.js';
 
-/** The only target Phase 5 supports. */
+/** The only target this project supports. */
 export const SUPPORTED_TARGET = 'dsh';
 
 /** The short upstream reference a converted package is measured against. */
@@ -58,6 +63,29 @@ export function targetContractReference(): string {
 export interface ConvertOptions {
   /** Directory used to resolve the source path. Defaults to the process cwd. */
   readonly cwd?: string;
+  /**
+   * Source adapter to read the skill with. `undefined` uses the generic local
+   * path, which is exactly the behaviour Phase 5 had.
+   */
+  readonly source?: string;
+}
+
+/**
+ * Converts a source issue into a conversion issue.
+ *
+ * @param issues Source findings.
+ */
+function toConversionIssues(issues: readonly SourceIssue[]): ConversionIssue[] {
+  return issues.map((issue) =>
+    issue.details === undefined
+      ? { code: issue.code, severity: issue.severity, message: issue.message }
+      : {
+          code: issue.code,
+          severity: issue.severity,
+          message: issue.message,
+          details: issue.details,
+        },
+  );
 }
 
 /** Everything a caller needs to report a conversion. */
@@ -68,6 +96,11 @@ export interface ConvertOutcome {
   /** Absolute requested output path. */
   readonly outputDirectory: string;
   readonly target: string;
+  /**
+   * Source adapter that was used. `generic-local` means no `--source` was given,
+   * which is the unchanged Phase 5 behaviour.
+   */
+  readonly source: string;
   /** Rendered plan preview, used by the report. */
   readonly writtenPaths: readonly string[];
 }
@@ -144,15 +177,13 @@ export function convertSkillToTarget(
   const cwd = path.resolve(options.cwd ?? process.cwd());
   const absoluteOutput = path.resolve(cwd, outputPath);
 
-  // Fatal input problems (missing path, bad YAML, ambiguity) propagate: they are
-  // not conversion refusals.
-  const source = loadLocalSkill(path.resolve(cwd, inputPath));
-  const sourceRoot = path.dirname(source.entryFile);
-
   const base = {
-    sourceRoot,
+    sourceRoot: cwd,
     outputDirectory: absoluteOutput,
     target,
+    // Recorded before the source is resolved, so a failed selection is still
+    // reported against the source the user asked for.
+    source: options.source ?? GENERIC_LOCAL_SOURCE_ID,
     writtenPaths: [] as readonly string[],
   };
 
@@ -160,17 +191,28 @@ export function convertSkillToTarget(
     return refusal(base, [
       error(
         CONVERSION_CODES.unsupportedResource,
-        `Unsupported target "${target}": Phase 5 can only convert to "${SUPPORTED_TARGET}"`,
+        `Unsupported target "${target}": this project can only convert to "${SUPPORTED_TARGET}"`,
       ),
     ]);
   }
+
+  // The source is resolved through the selected adapter. A refusal here is a
+  // deterministic outcome: an unknown source name, a package that does not have
+  // the source's shape, or frontmatter that violates its contract.
+  const loaded = loadSourceSkill(inputPath, options.source, cwd);
+  if (!loaded.ok) {
+    return refusal(base, toConversionIssues(loaded.issues));
+  }
+
+  const { skill, sourceRoot } = loaded;
+  const resolvedBase = { ...base, sourceRoot };
 
   // Refuse before doing anything else, so a refusal never creates output.
   // Containment is checked first: an output equal to the source root also
   // "exists", but naming the real problem is more useful than reporting that the
   // source directory is in the way.
   if (isAtOrBelow(sourceRoot, absoluteOutput)) {
-    return refusal(base, [
+    return refusal(resolvedBase, [
       error(
         CONVERSION_CODES.outputInsideSource,
         'Output directory must not be the source skill root or inside it',
@@ -179,7 +221,7 @@ export function convertSkillToTarget(
   }
 
   if (existsSync(absoluteOutput)) {
-    return refusal(base, [
+    return refusal(resolvedBase, [
       error(
         CONVERSION_CODES.outputAlreadyExists,
         `Output path already exists and is never overwritten: ${outputPath}`,
@@ -187,25 +229,36 @@ export function convertSkillToTarget(
     ]);
   }
 
-  let ir: SkillIR;
-  try {
-    ir = normalizeSkill(source.entryFile, { cwd: sourceRoot }).ir;
-  } catch (thrown) {
-    if (thrown instanceof SkillNotNormalizableError) {
-      return refusal(
-        base,
-        thrown.validation.errors.map((issue) =>
-          error(CONVERSION_CODES.generatedPackageInvalid, `${issue.code}: ${issue.message}`),
+  // The generic validation gate is still applied after the source contract: a
+  // skill can satisfy its own source and still be outside what IR v1 can
+  // represent (a source-valid Unicode name, for example). That is reported
+  // distinctly so it is never mistaken for a source adapter defect.
+  const validation = validateBasicSkill(skill);
+  if (!validation.valid) {
+    if (options.source !== undefined) {
+      return refusal(resolvedBase, [
+        error(
+          SOURCE_CODES.sourceValidIrUnsupported,
+          `The skill satisfies the ${options.source} source contract but cannot be represented as Universal Skill IR v1. This is not a source adapter defect.`,
+          validation.errors.map((issue) => `${issue.code}: ${issue.message}`),
         ),
-      );
+      ]);
     }
-    throw thrown;
+
+    return refusal(
+      resolvedBase,
+      validation.errors.map((issue) =>
+        error(CONVERSION_CODES.generatedPackageInvalid, `${issue.code}: ${issue.message}`),
+      ),
+    );
   }
+
+  const ir = toSkillIR(skill, sourceRoot);
 
   // Lossless or refused: uninterpreted source frontmatter has no mapping yet.
   const unmappedKeys = Object.keys(ir.source.extraFrontmatter);
   if (unmappedKeys.length > 0) {
-    return refusal(base, [
+    return refusal(resolvedBase, [
       error(
         CONVERSION_CODES.unmappedSourceFrontmatter,
         'Source frontmatter has no target mapping, so conversion is refused rather than dropping it',
@@ -216,7 +269,7 @@ export function convertSkillToTarget(
 
   const collected = collectResources(ir.resources, sourceRoot);
   if (collected.issues.length > 0) {
-    return refusal(base, collected.issues);
+    return refusal(resolvedBase, collected.issues);
   }
 
   const entry = renderDshSkillMarkdown(ir);
@@ -240,7 +293,7 @@ export function convertSkillToTarget(
 
       const destination = path.resolve(stagingDirectory, node.destination);
       if (!isPathWithin(stagingDirectory, destination)) {
-        return refusal(base, [
+        return refusal(resolvedBase, [
           error(
             CONVERSION_CODES.resourceOutsideSource,
             `Resource "${node.destination}" would be written outside the package`,
@@ -256,7 +309,7 @@ export function convertSkillToTarget(
 
     const verificationIssues = verifyGeneratedPackage(stagingDirectory);
     if (verificationIssues.length > 0) {
-      return refusal(base, verificationIssues);
+      return refusal(resolvedBase, verificationIssues);
     }
 
     // On Windows a scanner can briefly hold a freshly written script resource,
@@ -271,7 +324,7 @@ export function convertSkillToTarget(
   }
 
   return {
-    ...base,
+    ...resolvedBase,
     writtenPaths: plannedPaths,
     result: buildConversionResult([], {
       outputDirectory: absoluteOutput,
@@ -359,6 +412,10 @@ export function renderConversionReport(
     `Contract verified: ${DSH_CONTRACT_VERIFIED_AT}`,
     '',
     `Source: ${relativeSource.length === 0 ? '.' : relativeSource}`,
+    `Source adapter: ${outcome.source}`,
+    ...(outcome.source === GENERIC_LOCAL_SOURCE_ID
+      ? []
+      : [`Source contract: ${agentSkillsUpstreamReference()}`]),
     `Output: ${outcome.outputDirectory}`,
     '',
     'Result: SUCCESS',

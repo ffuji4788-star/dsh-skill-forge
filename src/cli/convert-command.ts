@@ -13,6 +13,11 @@ import { EXIT_FATAL, EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-
 export interface RunConvertOptions {
   /** Directory used to resolve the source path. Defaults to the process cwd. */
   readonly cwd?: string;
+  /**
+   * Source adapter selected with `--source`. `undefined` keeps the generic local
+   * behaviour, so omitting the option cannot change an existing conversion.
+   */
+  readonly source?: string;
   /** Sink for the report. Defaults to `process.stdout.write`. */
   readonly writeOut?: (text: string) => void;
   /** Sink for problem messages. Defaults to `process.stderr.write`. */
@@ -25,7 +30,7 @@ export interface RunConvertOptions {
  * @param inputPath Source skill file or directory.
  * @param target Requested target; only `dsh` is supported.
  * @param outputPath Destination directory; never overwritten.
- * @param options Output sinks and directory context.
+ * @param options Output sinks, directory context and the selected source.
  * @returns `0` on success, `2` when the conversion is refused, `1` on a fatal error.
  */
 export function runConvert(
@@ -39,7 +44,10 @@ export function runConvert(
   const cwd = path.resolve(options.cwd ?? process.cwd());
 
   try {
-    const outcome = convertSkillToTarget(inputPath, outputPath, target, { cwd });
+    const outcome = convertSkillToTarget(inputPath, outputPath, target, {
+      cwd,
+      ...(options.source === undefined ? {} : { source: options.source }),
+    });
     writeOut(renderConversionReport(outcome, { baseDirectory: cwd }));
 
     return outcome.result.converted ? EXIT_SUCCESS : EXIT_VALIDATION_FAILED;

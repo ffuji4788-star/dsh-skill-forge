@@ -174,19 +174,26 @@ export function createProgram(
     .description('Convert a local skill into a pinned-target package. Nothing is executed.')
     .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
     .usage('<path>')
+    .option('--source <source>', 'Explicit source adapter; omit for the generic local path')
     .requiredOption('--target <target>', 'Conversion target; only "dsh" is supported')
     .requiredOption('--out <directory>', 'Output directory; must not already exist')
-    .action((inputPath: string | undefined, commandOptions: { target: string; out: string }) => {
-      if (inputPath === undefined || inputPath.length === 0) {
-        program.error("error: missing required argument 'path'", { exitCode: 1 });
-        return;
-      }
+    .action(
+      (
+        inputPath: string | undefined,
+        commandOptions: { source?: string; target: string; out: string },
+      ) => {
+        if (inputPath === undefined || inputPath.length === 0) {
+          program.error("error: missing required argument 'path'", { exitCode: 1 });
+          return;
+        }
 
-      process.exitCode = runConvert(inputPath, commandOptions.target, commandOptions.out, {
-        writeOut,
-        writeErr,
-      });
-    });
+        process.exitCode = runConvert(inputPath, commandOptions.target, commandOptions.out, {
+          writeOut,
+          writeErr,
+          ...(commandOptions.source === undefined ? {} : { source: commandOptions.source }),
+        });
+      },
+    );
 
   return program;
 }

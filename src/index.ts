@@ -56,6 +56,55 @@ export {
   type RenderedEntry,
 } from './targets/dsh/dsh-target-adapter.js';
 export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
+export {
+  AGENT_SKILLS_ALLOWED_FIELDS,
+  AGENT_SKILLS_CONTRACT_SOURCES,
+  AGENT_SKILLS_ENTRY_NAMES,
+  AGENT_SKILLS_MAX_COMPATIBILITY_LENGTH,
+  AGENT_SKILLS_MAX_DESCRIPTION_LENGTH,
+  AGENT_SKILLS_MAX_NAME_LENGTH,
+  AGENT_SKILLS_SOURCE_ID,
+  AGENT_SKILLS_SOURCE_NAME,
+  AGENT_SKILLS_UPSTREAM_COMMIT,
+  AGENT_SKILLS_UPSTREAM_REPOSITORY,
+  ANTHROPIC_SKILLS_COMMIT,
+  ANTHROPIC_SKILLS_REPOSITORY,
+  ANTHROPIC_SKILLS_SOURCES,
+  agentSkillsUpstreamReference,
+} from './sources/agent-skills/agent-skills-contract.js';
+export {
+  AGENT_SKILLS_CODES,
+  validateAgentSkillFrontmatter,
+  type AgentSkillIssue,
+  type AgentSkillSeverity,
+  type AgentSkillValidationResult,
+} from './sources/agent-skills/agent-skills-validator.js';
+export {
+  AGENT_SKILLS_PACKAGE_CODES,
+  findAgentSkillEntry,
+  loadAgentSkill,
+} from './sources/agent-skills/agent-skills-source-adapter.js';
+export {
+  AVAILABLE_SOURCE_IDS,
+  GENERIC_LOCAL_SOURCE_ID,
+  isKnownSourceId,
+  loadSourceSkill,
+  SOURCE_CODES,
+  type SourceFailure,
+  type SourceIssue,
+  type SourceIssueSeverity,
+  type SourceLoadResult,
+  type SourceSuccess,
+} from './conversion/source-adapter.js';
+export {
+  comparePaths,
+  enumerateResources,
+  MARKDOWN_EXTENSIONS,
+  readSkillFile,
+  SKIPPED_DIRECTORY_NAMES,
+  statOrThrow,
+  toRelativePosixPath,
+} from './importers/skill-files.js';
 export { createProgram, stripOptionTerminator } from './cli/program.js';
 export { runCli, type RunOptions } from './cli/run.js';
 export {
@@ -69,7 +118,6 @@ export {
   findEntryFile,
   loadLocalSkill,
   readLocalSkill,
-  readSkillFile,
   resolveInputPath,
   type SourcePackage,
   type SourceType,

@@ -10,12 +10,22 @@
  * relative to the resolved source root with `/` separators, so output and tests
  * behave the same on Windows and POSIX.
  */
-import { readdirSync, readFileSync, statSync, type Dirent } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import path from 'node:path';
 
+import {
+  comparePaths,
+  enumerateResources,
+  isMarkdownFile,
+  readSkillFile,
+  statOrThrow,
+  toRelativePosixPath,
+} from './skill-files.js';
 import { parseFrontmatter } from '../parsers/frontmatter-parser.js';
 import { buildParsedSkill, type ParsedSkill } from '../schemas/skill.js';
 import { AmbiguousSkillError, SkillInputError } from '../utils/errors.js';
+
+export { enumerateResources, readSkillFile };
 
 /** How the skill source was supplied. */
 export type SourceType = 'file' | 'directory';
@@ -23,33 +33,8 @@ export type SourceType = 'file' | 'directory';
 /** Entry file name that takes precedence inside a directory. */
 export const SKILL_ENTRY_FILENAME = 'SKILL.md';
 
-/** Markdown extensions considered for skill entry points. */
-const MARKDOWN_EXTENSIONS: readonly string[] = ['.md', '.markdown'];
-
-/** Directory names never walked while enumerating resources. */
-const SKIPPED_DIRECTORY_NAMES = new Set<string>(['node_modules', '.git']);
-
-/** A local skill source, ready to be parsed. */
-export interface SourcePackage {
-  readonly sourceType: SourceType;
-  /** Absolute, resolved path of the file or directory that was supplied. */
-  readonly rootPath: string;
-  /** Absolute, resolved path of the skill entry file. */
-  readonly entryFile: string;
-  /** Files beside the skill, relative to `rootPath`, `/`-separated, sorted. */
-  readonly files: readonly string[];
-}
-
 function describeCause(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function comparePaths(left: string, right: string): number {
-  return left.localeCompare(right, 'en');
-}
-
-function isMarkdownFile(fileName: string): boolean {
-  return MARKDOWN_EXTENSIONS.includes(path.extname(fileName).toLowerCase());
 }
 
 /**
@@ -63,19 +48,15 @@ export function resolveInputPath(inputPath: string): string {
   return path.resolve(inputPath);
 }
 
-function statOrThrow(resolvedPath: string): { isFile: boolean; isDirectory: boolean } {
-  try {
-    const stats = statSync(resolvedPath);
-    return { isFile: stats.isFile(), isDirectory: stats.isDirectory() };
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT') {
-      throw new SkillInputError(`Path does not exist: ${resolvedPath}`, { cause: error });
-    }
-    throw new SkillInputError(`Unable to read path ${resolvedPath}: ${describeCause(error)}`, {
-      cause: error,
-    });
-  }
+/** A local skill source, ready to be parsed. */
+export interface SourcePackage {
+  readonly sourceType: SourceType;
+  /** Absolute, resolved path of the file or directory that was supplied. */
+  readonly rootPath: string;
+  /** Absolute, resolved path of the skill entry file. */
+  readonly entryFile: string;
+  /** Files beside the skill, relative to `rootPath`, `/`-separated, sorted. */
+  readonly files: readonly string[];
 }
 
 /**
@@ -129,54 +110,6 @@ export function findEntryFile(directory: string): string {
   return path.join(directory, only);
 }
 
-function toRelativePosixPath(root: string, absolutePath: string): string {
-  return path.relative(root, absolutePath).split(path.sep).join('/');
-}
-
-/**
- * Enumerates the files beside a skill.
- *
- * The walk is bounded by `root`, skips dependency and VCS directories, treats
- * symbolic links as plain entries (they are never followed, so enumeration
- * cannot leave the source root through one), and returns sorted,
- * `/`-separated relative paths.
- */
-function enumerateResources(root: string): string[] {
-  const pending: string[] = [root];
-  const resources: string[] = [];
-
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) {
-      break;
-    }
-
-    let entries: Dirent[];
-    try {
-      entries = readdirSync(current, { withFileTypes: true });
-    } catch (error) {
-      throw new SkillInputError(`Unable to list directory ${current}: ${describeCause(error)}`, {
-        cause: error,
-      });
-    }
-
-    for (const entry of entries) {
-      const absolutePath = path.join(current, entry.name);
-
-      if (entry.isDirectory()) {
-        if (!SKIPPED_DIRECTORY_NAMES.has(entry.name)) {
-          pending.push(absolutePath);
-        }
-        continue;
-      }
-
-      resources.push(toRelativePosixPath(root, absolutePath));
-    }
-  }
-
-  return resources.sort(comparePaths);
-}
-
 /**
  * Reads a local skill source.
  *
@@ -218,22 +151,6 @@ export function readLocalSkill(inputPath: string): SourcePackage {
   throw new SkillInputError(
     `Unsupported path type: ${resolved} is neither a regular file nor a directory.`,
   );
-}
-
-/**
- * Reads a UTF-8 text file.
- *
- * @param filePath Absolute path to read.
- * @throws SkillInputError when the file cannot be read.
- */
-export function readSkillFile(filePath: string): string {
-  try {
-    return readFileSync(filePath, 'utf8');
-  } catch (error) {
-    throw new SkillInputError(`Unable to read ${filePath}: ${describeCause(error)}`, {
-      cause: error,
-    });
-  }
 }
 
 /**
