@@ -1,10 +1,11 @@
 /**
  * Builds the `dsh-forge` command-line interface.
  *
- * Phase 4 registers exactly four commands: `analyze` describes a local skill,
+ * Phase 5 registers exactly five commands: `analyze` describes a local skill,
  * `validate` checks its structure, `compat` checks it against the pinned
- * DeepSeek Harness contract, and `normalize` emits the canonical Universal Skill
- * IR. No conversion, import or model-provider command exists.
+ * DeepSeek Harness contract, `normalize` emits the canonical Universal Skill IR,
+ * and `convert` writes a DSH package. No source adapter, adapter registry,
+ * remote import or model-provider command exists.
  */
 import { Command } from 'commander';
 
@@ -12,6 +13,7 @@ import { EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-codes.js';
 import { describeNodeRequirement, readPackageInfo } from '../utils/package-info.js';
 import { runAnalyze } from './analyze-command.js';
 import { runCompat } from './compat-command.js';
+import { runConvert } from './convert-command.js';
 import { runNormalize } from './normalize-command.js';
 import { runValidate } from './validate-command.js';
 
@@ -26,9 +28,9 @@ const HELP_FOOTER_SECTIONS = [
   commands, scripts, executables or binaries from a third-party skill. Skill
   resources are enumerated and read, never run.`,
   `Status:
-  Phase 4 (local analysis, deterministic validation, pinned DeepSeek Harness
-  compatibility and canonical Universal Skill IR). \`analyze\`, \`validate\`,
-  \`compat\` and \`normalize\` exist so far.`,
+  Phase 5 (local analysis, deterministic validation, pinned DeepSeek Harness
+  compatibility, canonical Universal Skill IR and safe DSH conversion).
+  \`analyze\`, \`validate\`, \`compat\`, \`normalize\` and \`convert\` exist so far.`,
 ];
 
 function buildEnvironmentSection(nodeRequirement: string | undefined): string {
@@ -167,7 +169,48 @@ export function createProgram(
       process.exitCode = runNormalize(inputPath, { writeOut, writeErr });
     });
 
+  program
+    .command('convert')
+    .description('Convert a local skill into a pinned-target package. Nothing is executed.')
+    .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
+    .usage('<path>')
+    .requiredOption('--target <target>', 'Conversion target; only "dsh" is supported')
+    .requiredOption('--out <directory>', 'Output directory; must not already exist')
+    .action((inputPath: string | undefined, commandOptions: { target: string; out: string }) => {
+      if (inputPath === undefined || inputPath.length === 0) {
+        program.error("error: missing required argument 'path'", { exitCode: 1 });
+        return;
+      }
+
+      process.exitCode = runConvert(inputPath, commandOptions.target, commandOptions.out, {
+        writeOut,
+        writeErr,
+      });
+    });
+
   return program;
+}
+
+/**
+ * Routes a command's output to the given sinks, recursively.
+ *
+ * Commander copies the output configuration when a subcommand is *created*, so
+ * configuring only the root after the fact leaves subcommands writing to the
+ * real process streams. That makes `runCli`'s sinks unreliable — a captured run
+ * would report an empty stderr for a usage error such as a missing required
+ * option — so every command is configured explicitly.
+ *
+ * @param command Command to configure, including its subcommands.
+ * @param sinks Output sinks.
+ */
+export function applyOutputConfiguration(
+  command: Command,
+  sinks: { readonly writeOut: (text: string) => void; readonly writeErr: (text: string) => void },
+): void {
+  command.configureOutput(sinks);
+  for (const subcommand of command.commands) {
+    applyOutputConfiguration(subcommand, sinks);
+  }
 }
 
 /**

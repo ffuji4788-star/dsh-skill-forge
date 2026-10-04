@@ -16,7 +16,12 @@ import { CommanderError, type Command } from 'commander';
 import { formatErrorMessage } from '../utils/error-message.js';
 import { ForgeError } from '../utils/errors.js';
 import { EXIT_FATAL, EXIT_SUCCESS } from '../utils/exit-codes.js';
-import { createProgram, renderRootHelp, stripOptionTerminator } from './program.js';
+import {
+  applyOutputConfiguration,
+  createProgram,
+  renderRootHelp,
+  stripOptionTerminator,
+} from './program.js';
 
 /** Commander exit codes that mean "the requested output was printed". */
 const BENIGN_EXIT_CODES: ReadonlySet<string> = new Set([
@@ -106,10 +111,7 @@ export async function runCli(options: RunOptions): Promise<number> {
 
   const program = createProgram(writeOut, writeErr);
   applyExitOverride(program);
-  program.configureOutput({
-    writeOut,
-    writeErr,
-  });
+  applyOutputConfiguration(program, { writeOut, writeErr });
 
   // The exit code is an output of this call, never a leftover from a previous
   // one, so a caller can invoke runCli repeatedly and get stable results.

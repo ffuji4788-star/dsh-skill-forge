@@ -26,6 +26,36 @@ export {
   type RunCompatOptions,
 } from './cli/compat-command.js';
 export { runNormalize, type RunNormalizeOptions } from './cli/normalize-command.js';
+export { runConvert, type RunConvertOptions } from './cli/convert-command.js';
+export {
+  convertSkillToTarget,
+  renderConversionReport,
+  SUPPORTED_TARGET,
+  targetContractReference,
+  verifyGeneratedPackage,
+  type ConvertOptions,
+  type ConvertOutcome,
+} from './conversion/convert-skill.js';
+export {
+  collectResources,
+  findUnportableSegmentProblem,
+  type ResourceCollection,
+  type ResourceNode,
+} from './conversion/resource-collector.js';
+export {
+  buildConversionResult,
+  CONVERSION_CODES,
+  type ConversionIssue,
+  type ConversionResult,
+  type ConversionSeverity,
+} from './schemas/conversion.js';
+export {
+  DSH_ENTRY_FILENAME,
+  renderDshFrontmatter,
+  renderDshSkillMarkdown,
+  type RenderedEntry,
+} from './targets/dsh/dsh-target-adapter.js';
+export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
 export { createProgram, stripOptionTerminator } from './cli/program.js';
 export { runCli, type RunOptions } from './cli/run.js';
 export {

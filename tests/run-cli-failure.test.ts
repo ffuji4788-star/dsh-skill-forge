@@ -12,11 +12,13 @@ const { createProgramMock } = vi.hoisted(() => ({
 
 vi.mock('../src/cli/program.js', () => ({
   createProgram: createProgramMock,
-  // `runCli` also imports this helper; the mock must provide it, and the real
-  // implementation is pure so it is safe to keep. It matches the real behaviour
-  // of removing only the leading terminator that pnpm forwards.
+  // `runCli` also imports these helpers; the mock must provide every symbol it
+  // uses. Both implementations are pure, so the real behaviour is safe to keep:
+  // one removes only the leading terminator pnpm forwards, the other routes
+  // output for a command and its subcommands.
   stripOptionTerminator: (argv: readonly string[]): string[] =>
     argv[0] === '--' ? argv.slice(1) : [...argv],
+  applyOutputConfiguration: (): void => {},
 }));
 
 describe('runCli failure handling', () => {

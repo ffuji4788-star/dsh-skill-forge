@@ -103,9 +103,9 @@ describe('operand rejection', () => {
   // `analyze` and `validate` are real commands, so only unimplemented commands
   // are rejected here.
   it.each([
-    ['convert', ['convert']],
+    ['publish', ['publish']],
     ['import', ['import']],
-    ['convert after a terminator', ['--', 'convert']],
+    ['publish after a terminator', ['--', 'publish']],
   ])('rejects %s with a message naming it', async (_label, argv) => {
     const error = await parseAndCaptureError(argv);
 

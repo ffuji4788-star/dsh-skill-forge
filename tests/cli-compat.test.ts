@@ -213,7 +213,7 @@ describe('command surface after Phase 3', () => {
     expect(stdout).toContain('analyze');
     expect(stdout).toContain('validate');
     expect(stdout).toContain('compat');
-    for (const absent of ['convert', 'import', 'install', 'migrate']) {
+    for (const absent of ['publish', 'import', 'install', 'migrate']) {
       expect(stdout).not.toContain(`${absent} `);
     }
   });
@@ -233,7 +233,7 @@ describe('command surface after Phase 3', () => {
   });
 
   it('rejects an unknown command with exit code 1', async () => {
-    const { exitCode, stderr } = await run('convert');
+    const { exitCode, stderr } = await run('publish');
 
     expect(exitCode).toBe(EXIT_FATAL);
     expect(stderr).toContain('unknown command');

@@ -67,11 +67,11 @@ describe('runCli', () => {
   });
 
   it('rejects an unimplemented command with a message that names it', async () => {
-    const { exitCode, stdout, stderr } = await run('convert');
+    const { exitCode, stdout, stderr } = await run('publish');
 
     expect(exitCode).toBe(1);
     expect(stdout).toBe('');
-    expect(stderr).toContain("unknown command 'convert'");
+    expect(stderr).toContain("unknown command 'publish'");
   });
 
   // `pnpm dev -- --help` forwards the terminator itself, so this is the exact

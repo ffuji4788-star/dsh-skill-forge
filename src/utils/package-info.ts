@@ -15,6 +15,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { formatErrorMessage } from './error-message.js';
+import { isAtOrBelow } from './path-boundary.js';
 
 /** The subset of `package.json` fields this project relies on. */
 export interface PackageInfo {
@@ -110,21 +111,6 @@ export function parsePackageInfo(raw: unknown, file = PACKAGE_JSON_FILENAME): Pa
     description: requireString(raw, 'description', file),
     nodeRequirement: readNodeRequirement(raw, file),
   };
-}
-
-/**
- * Reports whether `candidate` is `boundary` itself or nested inside it.
- *
- * `path.relative` cannot be used alone for this: on Windows it returns an
- * absolute path when the two paths have different roots, and an absolute result
- * means the candidate is on another drive rather than below the boundary.
- */
-function isAtOrBelow(boundary: string, candidate: string): boolean {
-  const relative = path.relative(boundary, candidate);
-  if (relative === '') {
-    return true;
-  }
-  return !path.isAbsolute(relative) && !relative.startsWith('..');
 }
 
 /**

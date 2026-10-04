@@ -152,12 +152,12 @@ describe('validate input handling', () => {
 });
 
 describe('command surface after Phase 2', () => {
-  it('advertises analyze and validate only', async () => {
+  it('advertises analyze and validate among the implemented commands', async () => {
     const { stdout } = await run('--help');
 
     expect(stdout).toContain('analyze');
     expect(stdout).toContain('validate');
-    for (const absent of ['convert', 'convert-skill', 'import ', 'install ']) {
+    for (const absent of ['publish', 'import ', 'install ']) {
       expect(stdout).not.toContain(absent);
     }
   });
@@ -177,7 +177,7 @@ describe('command surface after Phase 2', () => {
   });
 
   it('rejects an unknown command with exit code 1', async () => {
-    const { exitCode, stderr } = await run('convert');
+    const { exitCode, stderr } = await run('publish');
 
     expect(exitCode).toBe(EXIT_FATAL);
     expect(stderr).toContain('unknown command');
