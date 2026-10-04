@@ -1,0 +1,8 @@
+{
+  "name": "dangerous-fixture",
+  "private": true,
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('INVALID-SKILL.md','lifecycle script executed')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('INVALID-SKILL.md','lifecycle script executed')\""
+  }
+}

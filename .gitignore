@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test output and coverage
+coverage/
+
+# Environment files (keep the committed example)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Build and tool caches
+.cache/
+.vite/
+.eslintcache
+.npm/
+.pnpm-store/
+
+# Editor and OS temporary files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+*.tmp
