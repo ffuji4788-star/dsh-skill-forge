@@ -50,6 +50,9 @@ exclusive:
 27 + 17 = 44, so the split is total: every skill is either convertible or refused
 by exactly one of these boundaries.
 
+`resourceFiles` excludes each skill’s `SKILL.md` entry and counts the remaining
+files beneath that skill directory, including `agents/openai.yaml`.
+
 The corpus therefore **does** exercise both sides of the policy. It is not a
 corpus that this tool refuses wholesale, and not one it accepts wholesale.
 
@@ -108,14 +111,21 @@ checkout are byte-identical.
 
 ## Committed snapshot
 
-The measurement above is committed as
-`docs/data/openai-skills-49f948fa-codex-profile-survey.json` (34881 bytes,
-SHA-256 `D27527E8701429C048368E7088AE8203DEAE2A56AE8332EA2A6DE7B7FB90C7C5`).
+The pinned-corpus measurement is committed as
+`docs/data/openai-skills-49f948fa-codex-profile-survey.json` (34879 bytes,
+SHA-256 `295FEB9A84A1CC4BB1B526CABC49B963AA67BE880BCFA5D699FB96FE22FC1096`). The current survey definition excludes the entry file from
+`resourceFiles`; all 44 snapshot rows were corrected by removing their recorded
+`SKILL.md` entry once. The original pinned checkout was not available during this
+follow-up, so this resource-count correction was derived row by row from the
+committed snapshot and the previous counter’s behavior. Every other per-skill
+field and all classification totals are unchanged. Re-run the command against the
+pinned checkout to independently regenerate the corrected snapshot.
 
-Four independent runs over the same checkout produced byte-identical output, so
-the snapshot is deterministic and can be regenerated to prove the corpus has not
-been silently changed.
+The initial survey was generated in four independent runs over the same checkout
+and produced byte-identical output. That established determinism for the original
+measurement; the corrected resource counts have not yet been independently
+regenerated from the source checkout.
 
-It is generated, therefore it is **not** owned by the formatter: `docs/data/` is
+The snapshot is generated, so it is not owned by the formatter: `docs/data/` is
 excluded in `.prettierignore`, because reformatting a committed snapshot would
 destroy the property that makes it useful.

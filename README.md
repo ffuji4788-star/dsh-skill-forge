@@ -12,7 +12,7 @@ portable package semantics and read-only compatibility assessment exist so far.*
 
 ## Current status
 
-**Phase 8 / Real-world compatibility assessment.**
+**Phase 10 / Codex source profile and real-world compatibility assessment.**
 
 Six commands exist, and they answer six different questions:
 

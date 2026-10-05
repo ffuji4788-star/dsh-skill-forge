@@ -59,6 +59,7 @@ interface SurveyedCodexSkill {
   readonly sidecarSha256: string | null;
   readonly sidecarTopLevelKeys: readonly string[];
   readonly classification: string;
+  /** Resource files excluding the SKILL.md entry; accepted sidecars are resources. */
   readonly resourceFiles: number;
   readonly resourceDirectories: readonly string[];
   readonly status: string;
@@ -102,17 +103,17 @@ function sha256File(file: string): string {
   return createHash('sha256').update(readFileSync(file)).digest('hex');
 }
 
-function countFiles(root: string, skip: ReadonlySet<string>): number {
+function countFiles(root: string, entryFile: string): number {
   let count = 0;
   const pending = [root];
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined) break;
     for (const entry of readdirSync(current, { withFileTypes: true })) {
-      if (skip.has(entry.name)) continue;
+      if (entry.name === '.git') continue;
       const absolute = path.join(current, entry.name);
       if (entry.isDirectory()) pending.push(absolute);
-      else count += 1;
+      else if (path.resolve(absolute) !== path.resolve(entryFile)) count += 1;
     }
   }
   return count;
@@ -169,7 +170,7 @@ function surveyCollection(corpusRoot: string, collection: string): SurveyedCodex
       sidecarSha256: sidecar === undefined ? null : sha256File(sidecar),
       sidecarTopLevelKeys: inspection.topLevelKeys,
       classification: inspection.kind,
-      resourceFiles: countFiles(skillRoot, new Set(['.git'])),
+      resourceFiles: countFiles(skillRoot, entry),
       resourceDirectories: readdirSync(skillRoot, { withFileTypes: true })
         .filter((item) => item.isDirectory())
         .map((item) => item.name)

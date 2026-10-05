@@ -145,6 +145,16 @@ describe('classification and verdicts', () => {
 });
 
 describe('snapshot contents', () => {
+  it('counts package resources without counting the SKILL.md entry', () => {
+    const corpus = temporaryRoot();
+    writeSkill(corpus, '.curated', 'resource-count', { sidecar: 'interface: {}\n' });
+
+    const skill = surveyCodexCorpus(corpus).skills[0];
+
+    // The sidecar is carried as a package resource; SKILL.md is the entry itself.
+    expect(skill?.resourceFiles).toBe(1);
+  });
+
   it('records key names, counts and hashes, never values', () => {
     const corpus = temporaryRoot();
     writeSkill(corpus, '.curated', 'with-secrets', {
