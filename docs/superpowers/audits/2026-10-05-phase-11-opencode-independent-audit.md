@@ -13,6 +13,7 @@ This audit does not certify the pinned upstream source claims as freshly reprodu
 - Commit: `95daf90670b7c039c436c85537da5fbfe2205b41`
 - Selected contract: **Legacy V1**
 - Public docs, legacy V1, and Core/V2 are represented as separate surfaces.
+- Pin metadata cross-check: the [official commit page](https://github.com/anomalyco/opencode/commit/95daf90670b7c039c436c85537da5fbfe2205b41) confirms the full SHA, subject `fix(acp): restore session options and reasoning boundaries`, parent `0b934e9`, and a seven-file change set limited to ACP source and tests. This verifies the commit identity and context, not the skill-source blobs at that tree.
 
 ## Contract review
 
@@ -25,7 +26,7 @@ This audit does not certify the pinned upstream source claims as freshly reprodu
 | Hybrid mega-schema avoided                         | YES    | No docs/V1/V2 behavior is combined                                          |
 | Implementation honesty                             | PASS   | No adapter, profile, or CLI source flag is claimed as supported             |
 
-The V1 frontmatter and runtime claims are carried forward from the phase research and linked to the exact pin. The independent auditor confirmed local IR constraints but could not independently re-fetch those upstream pages, so this limitation remains material.
+The V1 frontmatter and runtime claims are carried forward from the phase research and linked to the exact pin. In this controller re-review, the official commit metadata page loaded, but the pinned V1 runtime, V1 test, Core/V2 runtime, and pinned documentation blobs still returned cache misses. Raw/API routes were unavailable, and a direct fetch of the exact commit ended with a connection reset. The commit-page cross-check therefore narrows the uncertainty to source content; it does not independently verify the contract behavior claims.
 
 ## IR and repository scope
 
@@ -64,6 +65,7 @@ The Phase 11 worktree starts at `b770511`, so its suite has 1043 passing tests. 
 - Successful package-script run: **PASS** using pnpm 11.7.0 and process-local `verify_deps_before_run=warn`, recorded in commit `5e75eb1`.
 - This task's bundled pnpm runtime: **BLOCKED** at `EPERM realpath` resolving the worktree's `node_modules` junction, even with the warning setting.
 - Direct full test suite after relocating TEMP: **PASS** as recorded above.
+- Controller re-run after this audit update: the default pnpm wrapper was blocked before script startup by the same junction `EPERM`. With access to the existing dependency junction and `verify_deps_before_run=warn`, typecheck, lint, format check, and build passed. The test process exited before reporting test files or assertions; a retry reported `memory allocation of 230928 bytes failed` and Windows exit `-1073740791`. A direct Vitest diagnostic also ended in V8 zone-allocation OOM. No install or source change occurred. The earlier successful full-suite result remains recorded, but this follow-up did not reproduce a complete gate pass.
 - Source or lockfile defect: **NO evidence found**
 - Classification: **EXECUTION ENVIRONMENT VARIANCE**
 
@@ -86,6 +88,6 @@ None in the local repository evidence. The upstream source-fetch limitation is r
 
 - OpenCode source implementation: **NO**
 - `--source opencode`: **NOT IMPLEMENTED**
-- Ready for master integration: **NO** until the environment variance and upstream evidence boundary are reviewed by the controlling task.
+- Ready for master integration: **NO**. The controlling review found no local documentation or IR defect, but the exact pinned skill-source and test contents remain unverified in that review. The branch remains research-only and unintegrated.
 - Ready for Phase 12: **NO**
 - Master integration, cherry-pick, and push: **NOT DONE**
