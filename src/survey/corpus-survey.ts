@@ -51,6 +51,13 @@ export interface SurveyedSkill {
     readonly code: string;
     readonly fields: readonly string[];
   }[];
+  /**
+   * Semantic field *names* carried in the tool-owned preservation envelope.
+   *
+   * Names only: a preserved license *value* is never recorded in a snapshot, for
+   * the same reason a description or an instruction body is not.
+   */
+  readonly preservedSemantics: readonly string[];
 }
 
 /** Aggregated corpus metrics. */
@@ -193,6 +200,7 @@ export function surveyCorpus(options: SurveyOptions): SurveyReport {
           code: issue.code,
           fields: issue.details === undefined ? [] : [...issue.details].sort(compareCodePoints),
         })),
+        preservedSemantics: [...result.preservedSemantics],
       });
       continue;
     }
@@ -221,6 +229,7 @@ export function surveyCorpus(options: SurveyOptions): SurveyReport {
         code: issue.code,
         fields: issue.details === undefined ? [] : [...issue.details].sort(compareCodePoints),
       })),
+      preservedSemantics: [...result.preservedSemantics],
     });
   }
 
@@ -300,6 +309,7 @@ export interface SurveySnapshot {
       readonly code: string;
       readonly fields: readonly string[];
     }[];
+    readonly preservedSemantics: readonly string[];
   }[];
 }
 
@@ -332,6 +342,7 @@ export function toSnapshot(
       resourceDirectories: skill.resourceDirectories,
       status: skill.status,
       issues: skill.issues,
+      preservedSemantics: skill.preservedSemantics,
     })),
   };
 }

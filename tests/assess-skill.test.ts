@@ -68,16 +68,14 @@ describe('assessment verdicts', () => {
     expect(assess(agentFixture('metadata-skill')).status).toBe('CONVERTIBLE');
   });
 
-  it('refuses a license at the SEMANTIC stage', () => {
+  it('reports a license-only skill as CONVERTIBLE, preserved rather than refused', () => {
     const result = assess(agentFixture('with-license'));
 
-    expect(result.status).toBe('REFUSED');
-    expect(result.stages.semantic).toBe('REFUSED');
+    expect(result.status).toBe('CONVERTIBLE');
+    expect(result.issues).toEqual([]);
     expect(result.stages.source).toBe('PASS');
     expect(result.stages.ir).toBe('PASS');
-    expect(result.issues[0]?.code).toBe(CONVERSION_CODES.unsupportedTargetSemantic);
-    expect(result.issues[0]?.stage).toBe('SEMANTIC');
-    expect(result.issues[0]?.details).toEqual(['license']);
+    expect(result.stages.semantic).toBe('PASS');
   });
 
   it('refuses compatibility at the SEMANTIC stage', () => {
@@ -97,16 +95,25 @@ describe('assessment verdicts', () => {
     expect(result.issues[0]?.details).toEqual(['allowed-tools']);
   });
 
-  it('refuses metadata combined with license as a whole', () => {
+  it('converts metadata combined with license, since both are carryable', () => {
     const dir = skillDirectory('mixed', {
       'SKILL.md': '---\nname: mixed\ndescription: d\nlicense: MIT\nmetadata:\n  a: b\n---\n\n# B\n',
     });
     const result = assess(dir);
 
+    expect(result.status).toBe('CONVERTIBLE');
+    expect(result.issues).toEqual([]);
+  });
+
+  it('refuses license combined with compatibility as a whole', () => {
+    const dir = skillDirectory('mixed-refused', {
+      'SKILL.md':
+        '---\nname: mixed-refused\ndescription: d\nlicense: MIT\ncompatibility: Requires git\n---\n\n# B\n',
+    });
+    const result = assess(dir);
+
     expect(result.status).toBe('REFUSED');
-    expect(result.issues.map((issue) => issue.code)).toEqual([
-      CONVERSION_CODES.unsupportedTargetSemantic,
-    ]);
+    expect(result.issues[0]?.details).toEqual(['compatibility']);
   });
 
   it('reports an unknown frontmatter key as SOURCE_INVALID and skips later stages', () => {
@@ -225,7 +232,8 @@ describe('resource preflight', () => {
 
   it('reports a semantic and a resource blocker together when the source is valid', () => {
     const dir = skillDirectory('semantic-and-resource', {
-      'SKILL.md': '---\nname: semantic-and-resource\ndescription: d\nlicense: MIT\n---\n\n# B\n',
+      'SKILL.md':
+        '---\nname: semantic-and-resource\ndescription: d\ncompatibility: Requires git\n---\n\n# B\n',
       'NUL.md': 'x\n',
     });
     const result = assess(dir);

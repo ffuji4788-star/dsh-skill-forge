@@ -41,6 +41,12 @@ export interface AssessmentResult {
     readonly target: AssessmentStageStatus;
   };
   readonly issues: readonly AssessmentIssue[];
+  /**
+   * Semantic field names that would be carried in the tool-owned preservation
+   * envelope, sorted. Reported so a reader knows a declaration is preserved
+   * without being told the target understands it.
+   */
+  readonly preservedSemantics: readonly string[];
 }
 
 export interface AssessOptions {
@@ -102,6 +108,7 @@ export function assessSkill(inputPath: string, options: AssessOptions): Assessme
       target: stageStatus('TARGET', issues, reached('TARGET')),
     },
     issues,
+    preservedSemantics: plan.ok ? Object.keys(plan.preservedSemantics).sort() : [],
   };
 }
 
@@ -142,6 +149,15 @@ export function renderAssessmentReport(result: AssessmentResult): string {
     'Target Contract:',
     result.stages.target,
   ];
+
+  if (result.preservedSemantics.length > 0) {
+    lines.push(
+      '',
+      'Preserved Semantics:',
+      ...result.preservedSemantics.map((field) => `  ${field}`),
+      '  (carried verbatim in a tool-owned envelope; the target does not interpret it)',
+    );
+  }
 
   if (result.issues.length > 0) {
     lines.push('', 'Issues:', '');

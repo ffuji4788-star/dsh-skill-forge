@@ -21,9 +21,11 @@ import { toSkillIRV2, type SourceProvenance } from '../ir/normalize-skill-v2.js'
 import { GENERIC_LOCAL_SKILL_FORMAT, type SkillIRV2 } from '../ir/skill-ir-v2.js';
 import {
   renderDshSkillMarkdownV2,
+  toDshEmitExtras,
   unsupportedDshSemantics,
   type RenderedEntry,
 } from '../targets/dsh/dsh-target-adapter.js';
+import { readPreservedSemantics } from '../targets/dsh/dsh-metadata-envelope.js';
 import { validateBasicSkill } from '../validators/basic-skill-validator.js';
 import type { ParsedSkill } from '../schemas/skill.js';
 import { SUPPORTED_TARGET } from './target-id.js';
@@ -81,6 +83,13 @@ export interface ConversionPlan {
   readonly resources: ResourceCollection;
   /** Package-relative paths the conversion would write, sorted. */
   readonly plannedPaths: readonly string[];
+  /**
+   * Semantic field names carried in the tool-owned preservation envelope.
+   *
+   * Reported so a caller can say "license: preserved" without claiming the target
+   * understands it. Empty when nothing was preserved.
+   */
+  readonly preservedSemantics: Readonly<Record<string, string>>;
   readonly issues: readonly StagedIssue[];
 }
 
@@ -272,6 +281,27 @@ export function planConversion(inputPath: string, options: PlanOptions): Convers
     };
   }
 
+  // The metadata envelope is built before anything is collected or written, so a
+  // namespace collision stops the conversion while no staging directory exists.
+  const extras = toDshEmitExtras(ir.semantics);
+  if (!extras.ok) {
+    return {
+      ok: false,
+      source: loaded.source,
+      sourceRoot,
+      sourceContractFailed: false,
+      issues: extras.problems.map((problem) =>
+        staged(
+          'SEMANTIC',
+          problem.code === 'TARGET_METADATA_NAMESPACE_COLLISION'
+            ? CONVERSION_CODES.targetMetadataNamespaceCollision
+            : CONVERSION_CODES.unrepresentableIrValue,
+          problem.message,
+        ),
+      ),
+    };
+  }
+
   const resources = collectResources(ir.resources, sourceRoot);
   if (resources.issues.length > 0) {
     return {
@@ -289,6 +319,8 @@ export function planConversion(inputPath: string, options: PlanOptions): Convers
     ...resources.nodes.filter((node) => node.kind === 'file').map((node) => node.destination),
   ].sort((left, right) => left.localeCompare(right, 'en'));
 
+  const preservedSemantics = readPreservedSemantics(extras.extras.metadata ?? {});
+
   return {
     ok: true,
     source: loaded.source,
@@ -299,6 +331,7 @@ export function planConversion(inputPath: string, options: PlanOptions): Convers
     entry,
     resources,
     plannedPaths,
+    preservedSemantics,
     issues: [],
   };
 }

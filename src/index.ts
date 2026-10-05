@@ -55,6 +55,17 @@ export {
   renderDshSkillMarkdown,
   type RenderedEntry,
 } from './targets/dsh/dsh-target-adapter.js';
+export {
+  buildDshMetadata,
+  DSH_PRESERVATION_VERSION,
+  DSH_SKILL_FORGE_METADATA_NAMESPACE,
+  hasPreservationEnvelope,
+  PRESERVABLE_SEMANTIC_FIELDS,
+  readPreservedSemantics,
+  type DshMetadataBuild,
+  type DshPreservationEnvelope,
+  type MetadataBuildProblem,
+} from './targets/dsh/dsh-metadata-envelope.js';
 export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
 export {
   assessSkill,

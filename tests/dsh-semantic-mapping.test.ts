@@ -210,21 +210,39 @@ describe('metadata maps to the DSH target', () => {
   });
 });
 
-describe('unsupported semantics are refused, never reinterpreted', () => {
-  it.each([
-    ['license', 'with-license', 'license'],
-    ['compatibility', 'with-compatibility-check', 'compatibility'],
-  ])('refuses %s with UNSUPPORTED_TARGET_SEMANTIC', async (_label, fixture, field) => {
+describe('license is preserved opaquely, compatibility is refused', () => {
+  it('preserves a license declaration instead of refusing it', async () => {
     const out = path.join(temporaryRoot(), 'generated');
-    const { exitCode, stdout } = await convert(`fixtures/sources/agent-skills/${fixture}`, out);
+    const { exitCode, stdout } = await convert('fixtures/sources/agent-skills/with-license', out);
+
+    expect(exitCode).toBe(EXIT_SUCCESS);
+    expect(stdout).toContain('Result: SUCCESS');
+
+    const frontmatter = generatedFrontmatter(out);
+    // The declaration lives only in the tool-owned envelope, never at top level.
+    expect(frontmatter).not.toHaveProperty('license');
+    expect(frontmatter['metadata']).toEqual({
+      'dsh-skill-forge': {
+        preservationVersion: 1,
+        preservedSemantics: { license: 'Apache-2.0' },
+      },
+    });
+  });
+
+  it('refuses compatibility with UNSUPPORTED_TARGET_SEMANTIC', async () => {
+    const out = path.join(temporaryRoot(), 'generated');
+    const { exitCode, stdout } = await convert(
+      'fixtures/sources/agent-skills/with-compatibility-check',
+      out,
+    );
 
     expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
     expect(stdout).toContain(CONVERSION_CODES.unsupportedTargetSemantic);
-    expect(stdout).toContain(`- ${field}`);
+    expect(stdout).toContain('- compatibility');
     expect(existsSync(out)).toBe(false);
   });
 
-  it('reports both unsupported semantics in deterministic sorted order', async () => {
+  it('refuses license combined with compatibility as a whole', async () => {
     const root = temporaryRoot();
     const skill = path.join(root, 'both-semantics');
     const { mkdirSync, writeFileSync } = await import('node:fs');
@@ -238,33 +256,39 @@ describe('unsupported semantics are refused, never reinterpreted', () => {
     const first = await convert(skill, out);
     const second = await convert(skill, path.join(root, 'generated-2'));
 
+    // A preservable license must not let a behavioural semantic through.
     expect(first.exitCode).toBe(EXIT_VALIDATION_FAILED);
-    // Sorted, so object insertion order cannot influence the report.
-    expect(first.stdout.indexOf('- compatibility')).toBeLessThan(first.stdout.indexOf('- license'));
+    expect(first.stdout).toContain(CONVERSION_CODES.unsupportedTargetSemantic);
+    expect(first.stdout).toContain('- compatibility');
     expect(second.stdout).toBe(first.stdout);
     expect(existsSync(out)).toBe(false);
   });
 
-  it('refuses metadata combined with license rather than emitting the metadata', async () => {
+  it('converts metadata combined with license, keeping both distinct', async () => {
     const root = temporaryRoot();
-    const skill = path.join(root, 'mixed-semantics');
+    const skill = path.join(root, 'metadata-and-license');
     const { mkdirSync, writeFileSync } = await import('node:fs');
     mkdirSync(skill, { recursive: true });
     writeFileSync(
       path.join(skill, 'SKILL.md'),
-      '---\nname: mixed-semantics\ndescription: d\nlicense: MIT\nmetadata:\n  author: example-org\n---\n\n# Body\n',
+      '---\nname: metadata-and-license\ndescription: d\nlicense: Complete terms in LICENSE.txt\nmetadata:\n  author: example-org\n---\n\n# Body\n',
     );
 
     const out = path.join(root, 'generated');
-    const { exitCode, stdout } = await convert(skill, out);
+    const { exitCode } = await convert(skill, out);
 
-    expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
-    expect(stdout).toContain(CONVERSION_CODES.unsupportedTargetSemantic);
-    expect(stdout).toContain('- license');
-    // No partial package: the mapable metadata is not emitted on its own.
-    expect(existsSync(out)).toBe(false);
+    expect(exitCode).toBe(EXIT_SUCCESS);
+    expect(generatedFrontmatter(out)['metadata']).toEqual({
+      author: 'example-org',
+      'dsh-skill-forge': {
+        preservationVersion: 1,
+        preservedSemantics: { license: 'Complete terms in LICENSE.txt' },
+      },
+    });
   });
+});
 
+describe('mixed refusals never let a preservable field through', () => {
   it('refuses metadata combined with allowed-tools as unmapped source data', async () => {
     const root = temporaryRoot();
     const skill = path.join(root, 'mixed-source');
@@ -289,7 +313,10 @@ describe('unsupported semantics are refused, never reinterpreted', () => {
 
   it('leaves no staging directory and no output for any refusal', async () => {
     const parent = temporaryRoot();
-    await convert('fixtures/sources/agent-skills/with-license', path.join(parent, 'generated'));
+    await convert(
+      'fixtures/sources/agent-skills/with-compatibility-check',
+      path.join(parent, 'generated'),
+    );
 
     expect(readdirSync(parent)).toEqual([]);
   });
@@ -401,7 +428,10 @@ describe('the v2 renderer used by the converter', () => {
 
     // The mapping helpers agree with each other.
     expect(unsupportedDshSemantics({ metadata: {} })).toEqual([]);
-    expect(toDshEmitExtras({ metadata: { a: 'b' } })).toEqual({ metadata: { a: 'b' } });
+    expect(toDshEmitExtras({ metadata: { a: 'b' } })).toEqual({
+      ok: true,
+      extras: { metadata: { a: 'b' } },
+    });
   });
 
   it('emits no metadata block for empty metadata', () => {
@@ -421,11 +451,13 @@ describe('the v2 renderer used by the converter', () => {
     expect(rendered.content).toContain('name: empty-metadata-skill');
   });
 
-  it('reports every non-metadata semantic as unsupported, sorted', () => {
+  it('reports compatibility as unsupported while license is preservable', () => {
+    // A license is carried in the preservation envelope, so it is not an
+    // unsupported semantic; compatibility is behavioural and stays refused.
     expect(unsupportedDshSemantics({ license: 'MIT', compatibility: 'Requires git' })).toEqual([
       'compatibility',
-      'license',
     ]);
+    expect(unsupportedDshSemantics({ license: 'MIT', metadata: {} })).toEqual([]);
   });
 });
 

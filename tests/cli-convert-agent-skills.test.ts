@@ -218,10 +218,29 @@ describe('optional source semantics and the target', () => {
   // refusal for a *known* semantic is now UNSUPPORTED_TARGET_SEMANTIC rather than
   // UNMAPPED_SOURCE_FRONTMATTER. The distinction is deliberate: the meaning is
   // known, and this target simply has no field for it.
-  it.each([
-    ['license', 'with-license', 'license'],
-    ['compatibility', 'with-compatibility-check', 'compatibility'],
-  ])(
+  it('converts a license-only Agent Skill, preserving the declaration opaquely', async () => {
+    const out = path.join(temporaryRoot(), 'generated');
+    const { exitCode, stdout, stderr } = await run(
+      'convert',
+      'fixtures/sources/agent-skills/with-license',
+      '--source',
+      'agent-skills',
+      '--target',
+      'dsh',
+      '--out',
+      out,
+    );
+
+    expect(exitCode).toBe(EXIT_SUCCESS);
+    expect(stderr).toBe('');
+    expect(stdout).toContain('Result: SUCCESS');
+    // Preserved, not mapped: the declaration lives in the tool-owned envelope and
+    // never as a top-level DSH field.
+    expect(readFileSync(path.join(out, 'SKILL.md'), 'utf8')).toContain('license: Apache-2.0');
+    expect(readFileSync(path.join(out, 'SKILL.md'), 'utf8')).not.toMatch(/^license:/m);
+  });
+
+  it.each([['compatibility', 'with-compatibility-check', 'compatibility']])(
     'refuses %s with UNSUPPORTED_TARGET_SEMANTIC rather than dropping it',
     async (_label, fixture, field) => {
       const out = path.join(temporaryRoot(), 'generated');

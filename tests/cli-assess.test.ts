@@ -130,7 +130,7 @@ describe('assess verdicts', () => {
     expect(stdout).toContain('Convertible:\nYES');
   });
 
-  it('reports a license refusal at exit 2 with the stage named', async () => {
+  it('reports a license-only skill as CONVERTIBLE: preserved, not refused', async () => {
     const { exitCode, stdout } = await run(
       'assess',
       'fixtures/sources/agent-skills/with-license',
@@ -140,10 +140,27 @@ describe('assess verdicts', () => {
       'dsh',
     );
 
+    expect(exitCode).toBe(EXIT_SUCCESS);
+    expect(stdout).toContain('Result:\nCONVERTIBLE');
+    expect(stdout).toContain('Semantics:\nPASS');
+    expect(stdout).toContain('Convertible:\nYES');
+    expect(stdout).not.toContain(CONVERSION_CODES.unsupportedTargetSemantic);
+  });
+
+  it('reports a compatibility refusal at exit 2 with the stage named', async () => {
+    const { exitCode, stdout } = await run(
+      'assess',
+      'fixtures/sources/agent-skills/with-compatibility-check',
+      '--source',
+      'agent-skills',
+      '--target',
+      'dsh',
+    );
+
     expect(exitCode).toBe(EXIT_VALIDATION_FAILED);
     expect(stdout).toContain(CONVERSION_CODES.unsupportedTargetSemantic);
     expect(stdout).toContain('stage: SEMANTIC');
-    expect(stdout).toContain('- license');
+    expect(stdout).toContain('- compatibility');
     expect(stdout).toContain('Semantics:\nREFUSED');
   });
 

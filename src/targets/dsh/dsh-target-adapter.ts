@@ -12,8 +12,15 @@
  */
 import { stringify } from 'yaml';
 
+import type { JsonObject } from '../../ir/json-value.js';
 import type { SkillIR } from '../../ir/skill-ir.js';
 import type { SkillIRV2 } from '../../ir/skill-ir-v2.js';
+import type { PortableSemantics } from '../../ir/portable-semantics.js';
+import {
+  buildDshMetadata,
+  PRESERVABLE_SEMANTIC_FIELDS,
+  type MetadataBuildProblem,
+} from './dsh-metadata-envelope.js';
 
 /** The single file name a DSH directory-bundle skill uses for its entry. */
 export const DSH_ENTRY_FILENAME = 'SKILL.md';
@@ -61,12 +68,13 @@ export function renderDshSkillMarkdown(ir: SkillIR): RenderedEntry {
  *
  * `metadata` is emitted verbatim: the pinned contract documents it as provider
  * frontmatter the registry carries without reading, so a string map survives
- * unchanged. `whenToUse` and the invocation keys are deliberately absent — no
- * Phase 7 source has a proven mapping onto them, and inventing one would change
- * which skills a model may load.
+ * unchanged — and it may also hold the tool-owned preservation envelope, which is
+ * a nested object. `whenToUse` and the invocation keys are deliberately absent —
+ * no source has a proven mapping onto them, and inventing one would change which
+ * skills a model may load.
  */
 export interface DshEmitExtras {
-  readonly metadata?: Readonly<Record<string, string>>;
+  readonly metadata?: JsonObject;
 }
 
 /**
@@ -109,31 +117,36 @@ export function renderDshEntry(
 /**
  * Renders IR v2 as a DSH `SKILL.md`.
  *
- * Only `semantics.metadata` reaches the target. `license` and `compatibility`
- * have no counterpart here and are refused before this point rather than being
- * folded into description, body or metadata.
+ * Only `semantics.metadata` and the opaque license envelope reach the target.
+ * `compatibility` is refused before this point rather than being folded into
+ * description, body or metadata.
  *
  * @param ir Universal Skill IR v2.
  * @returns The rendered entry document.
  */
 export function renderDshSkillMarkdownV2(ir: SkillIRV2): RenderedEntry {
-  const metadata = ir.semantics['metadata'];
-  const extras: DshEmitExtras =
-    typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)
-      ? { metadata: metadata as Record<string, string> }
-      : {};
-
-  return renderDshEntry(ir.name, ir.description, ir.instructions, extras);
+  const extras = toDshEmitExtras(ir.semantics);
+  return renderDshEntry(ir.name, ir.description, ir.instructions, extras.ok ? extras.extras : {});
 }
 
 /**
- * Reports which portable semantics this target cannot express.
+ * Reports which portable semantics this target cannot express *or* preserve.
  *
- * A semantic that reaches the target but has no counterpart is a refusal, never a
- * silent drop and never a reinterpretation. `license` and `compatibility` are
- * unsupported here because the pinned contract has no field carrying a license or
- * environment requirement: folding either into `description`, the body, or
- * `metadata` would invent a meaning the source never stated.
+ * Two things reach this point and only two:
+ *
+ * - `metadata` is a native mapping: the pinned contract documents `metadata` as
+ *   provider frontmatter that the registry carries without reading, so a string
+ *   map survives unchanged.
+ * - `license` is an **opaque preservation**: DSH has no native license semantic,
+ *   so the declaration is copied verbatim into a tool-owned envelope instead of
+ *   being interpreted. That is safe precisely because a license declaration does
+ *   not govern instructions, routing, permissions or invocation.
+ *
+ * `compatibility` is refused. It describes runtime and environment requirements,
+ * which *are* behavioural: carrying it into a target that does not act on it would
+ * silently change meaning. The same reasoning refuses `allowed-tools`, which never
+ * reaches this function at all because it is a source-specific permission
+ * vocabulary that is never promoted to a portable semantic.
  *
  * Results are sorted, so the report cannot depend on object key order.
  *
@@ -142,20 +155,31 @@ export function renderDshSkillMarkdownV2(ir: SkillIRV2): RenderedEntry {
  */
 export function unsupportedDshSemantics(semantics: Readonly<Record<string, unknown>>): string[] {
   return Object.keys(semantics)
-    .filter((field) => field !== 'metadata')
+    .filter((field) => field !== 'metadata' && !PRESERVABLE_SEMANTIC_FIELDS.includes(field))
     .sort((left, right) => left.localeCompare(right, 'en'));
 }
 
 /**
  * Maps portable semantics onto the frontmatter this target can emit.
  *
+ * Native metadata is carried as-is and a preservable declaration is added under
+ * the tool-owned namespace. The object is built by
+ * {@link buildDshMetadata}, so key ordering, collision handling and value
+ * fidelity have exactly one implementation.
+ *
  * @param semantics Serialized portable semantics.
- * @returns The emit extras for the supported fields.
+ * @returns The emit plan, or the problems that prevented building one.
  */
-export function toDshEmitExtras(semantics: Readonly<Record<string, unknown>>): DshEmitExtras {
-  const metadata = semantics['metadata'];
-  if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
-    return {};
+export function toDshEmitExtras(
+  semantics: Readonly<Record<string, unknown>>,
+):
+  | { readonly ok: true; readonly extras: DshEmitExtras }
+  | { readonly ok: false; readonly problems: readonly MetadataBuildProblem[] } {
+  const built = buildDshMetadata(semantics as PortableSemantics);
+  if (!built.ok) {
+    return { ok: false, problems: built.problems };
   }
-  return { metadata: { ...(metadata as Record<string, string>) } };
+  // `metadata` is always present rather than conditionally spread, so the result
+  // is a single well-typed shape; the emitter omits an empty mapping anyway.
+  return { ok: true, extras: { metadata: built.metadata } };
 }

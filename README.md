@@ -338,18 +338,18 @@ Two rules matter most:
 ### What converts today
 
 Conversion builds IR v2 internally, so a field the source adapter interpreted can
-be mapped instead of refused. For an Agent Skill that means:
+be carried instead of refused. For an Agent Skill that means:
 
-| Agent Skills field                     | Result                                                                  |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| `name`, `description`, body, resources | converted                                                               |
-| `metadata`                             | **converted** — `metadata` is carried into the DSH frontmatter verbatim |
-| `license`                              | refused: `UNSUPPORTED_TARGET_SEMANTIC`                                  |
-| `compatibility`                        | refused: `UNSUPPORTED_TARGET_SEMANTIC`                                  |
-| `allowed-tools`                        | refused: `UNMAPPED_SOURCE_FRONTMATTER`                                  |
+| Agent Skills field                     | Result                                                               |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `name`, `description`, body, resources | converted                                                            |
+| `metadata`                             | **converted** — carried into the DSH frontmatter verbatim            |
+| `license`                              | **converted** — preserved verbatim in a tool-owned metadata envelope |
+| `compatibility`                        | refused: `UNSUPPORTED_TARGET_SEMANTIC`                               |
+| `allowed-tools`                        | refused: `UNMAPPED_SOURCE_FRONTMATTER`                               |
 
 ```bash
-# An Agent Skill whose only optional field is metadata: this converts.
+# An Agent Skill with metadata and a license: this converts.
 dsh-forge convert ./my-agent-skill --source agent-skills --target dsh --out ./generated/my-skill
 ```
 
@@ -358,11 +358,44 @@ dsh-forge convert ./my-agent-skill --source agent-skills --target dsh --out ./ge
 reads inside the object. The evidence is recorded in
 [docs/skill-ir-v2.md](./docs/skill-ir-v2.md).
 
-`license` and `compatibility` have no DSH field, and folding either into
-`description`, the body or `metadata` would invent a meaning the source never
-stated — so they are refused rather than approximated. `allowed-tools` is an
-experimental tool vocabulary, not a portable package semantic, so it is never
-promoted at all.
+`compatibility` has no DSH field, and folding it into `description`, the body or
+`metadata` would invent a meaning the source never stated — so it is refused rather
+than approximated. `allowed-tools` is an experimental tool vocabulary, not a
+portable package semantic, so it is never promoted at all.
+
+### License preservation
+
+**DSH has no native license semantic, and this project does not invent one.** A
+license declaration is instead preserved verbatim in a namespaced, versioned,
+tool-owned envelope inside `metadata`:
+
+```yaml
+metadata:
+  dsh-skill-forge:
+    preservationVersion: 1
+    preservedSemantics:
+      license: Proprietary. LICENSE.txt has complete terms
+```
+
+- **Preservation, not mapping.** There is no DSH license field and no top-level
+  `license` in the generated frontmatter.
+- **DSH does not interpret it,** and neither does this tool.
+- **No legal analysis is performed.** Nothing decides whether a license is
+  compatible, approved, commercially usable or redistributable.
+- **The string is preserved exactly** — no trimming, normalisation, SPDX lookup or
+  rewriting.
+- **Resource files remain byte-identical copies.** A bundled `LICENSE.txt` is an
+  ordinary resource; it is never parsed as a reference, and no missing license file
+  is ever synthesised.
+- **A source already using the `dsh-skill-forge` metadata key is refused**
+  (`TARGET_METADATA_NAMESPACE_COLLISION`) rather than overwritten or merged.
+
+This is why a license may be carried while `compatibility` and `allowed-tools` may
+not: a declaration does not govern instructions, routing, permissions or
+invocation, but those two describe runtime requirements and permissions —
+behavioural facts that would silently change meaning in a target that ignores them.
+
+Full rules: [docs/license-preservation-envelope.md](./docs/license-preservation-envelope.md).
 
 The package is written to a staging directory beside the output and fully
 re-validated — generic validation plus pinned DSH compatibility — before being

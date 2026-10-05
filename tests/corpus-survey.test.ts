@@ -111,8 +111,10 @@ describe('aggregation', () => {
 
   it('counts verdicts', () => {
     expect(report.summary.total).toBe(8);
-    expect(report.summary.convertible).toBe(3);
-    expect(report.summary.refused).toBe(3);
+    // `gamma-license` now converts: a license is preserved opaquely rather than
+    // refused, which is the Phase 9 change.
+    expect(report.summary.convertible).toBe(4);
+    expect(report.summary.refused).toBe(2);
     expect(report.summary.sourceInvalid).toBe(2);
   });
 
@@ -126,7 +128,8 @@ describe('aggregation', () => {
   });
 
   it('counts blockers by code and field', () => {
-    expect(report.summary.blockerFrequency['UNSUPPORTED_TARGET_SEMANTIC: license']).toBe(1);
+    // A license is preserved, so it is no longer a blocker.
+    expect(report.summary.blockerFrequency['UNSUPPORTED_TARGET_SEMANTIC: license']).toBeUndefined();
     expect(report.summary.blockerFrequency['UNSUPPORTED_TARGET_SEMANTIC: compatibility']).toBe(1);
     expect(report.summary.blockerFrequency['UNMAPPED_SOURCE_FRONTMATTER: allowed-tools']).toBe(1);
     // An unknown-key issue names the offending field inside its message rather
@@ -289,7 +292,7 @@ describe('survey CLI', () => {
     expect(text).toContain('Per skill:');
     expect(text).toContain('alpha-minimal');
     expect(text).toContain('CONVERTIBLE');
-    expect(text).toContain('UNSUPPORTED_TARGET_SEMANTIC: license');
+    expect(text).toContain('UNSUPPORTED_TARGET_SEMANTIC: compatibility');
   });
 });
 

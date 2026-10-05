@@ -3,3 +3,9 @@ dist/
 coverage/
 pnpm-lock.yaml
 *.log
+# Generated corpus-survey snapshots. They are produced by
+# `pnpm survey:agent-skills` and kept as reproducibility baselines, so their byte
+# format is owned by that generator rather than by the formatter. Reformatting one
+# would also destroy the point of committing it: a previously committed snapshot
+# must stay byte-identical to prove it was not rewritten.
+docs/data/
