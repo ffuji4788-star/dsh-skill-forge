@@ -1,0 +1,11 @@
+# Product configuration for this skill.
+# Comments and unusual formatting must survive a round trip unchanged.
+interface:
+    brand_color:   "#3B82F6"
+    display_name: 'Codex   Interface Only'   # single-quoted, extra spaces
+    icon_small: "./assets/icon-small.svg"
+    icon_large: "./assets/icon-large.png"
+
+    short_description: "Demonstrates interface-only sidecar preservation"
+
+    default_prompt: "Use $codex-interface-only to show sidecar preservation."

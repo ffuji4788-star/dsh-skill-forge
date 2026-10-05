@@ -64,11 +64,24 @@ function staged(
     : { stage, code, severity: 'error', message, details };
 }
 
-/** Reports whether a source failure means the source contract itself is invalid. */
+/**
+ * Reports whether a source failure means the source contract itself is invalid.
+ *
+ * `target-support` is deliberately excluded: the package satisfied its own
+ * contract and declares something the target cannot express. That is a semantic
+ * refusal, so the source is still reported as valid.
+ */
 function isSourceContractFailure(selection: string): boolean {
   return (
     selection === 'selection' || selection === 'package-shape' || selection === 'source-contract'
   );
+}
+
+/** Narrows a source-declared stage name to a conversion stage. */
+function toConversionStage(stage: string | undefined): ConversionStage {
+  return CONVERSION_STAGE_ORDER.includes(stage as ConversionStage)
+    ? (stage as ConversionStage)
+    : 'SOURCE';
 }
 
 /** A skill that passed every planning stage and can be written. */
@@ -90,6 +103,13 @@ export interface ConversionPlan {
    * understands it. Empty when nothing was preserved.
    */
   readonly preservedSemantics: Readonly<Record<string, string>>;
+  /**
+   * Which optional product sidecar the source package carried.
+   *
+   * `undefined` for a source with no sidecar concept, and for a failure that
+   * happened before the sidecar could be classified.
+   */
+  readonly codexSidecar?: string;
   readonly issues: readonly StagedIssue[];
 }
 
@@ -107,6 +127,13 @@ export interface ConversionPlanFailure {
    * meaningful and no later issue exists.
    */
   readonly sourceContractFailed: boolean;
+  /**
+   * Which optional product sidecar the source package carried.
+   *
+   * `undefined` for a source with no sidecar concept, and for a failure that
+   * happened before a sidecar could be classified.
+   */
+  readonly codexSidecar?: string;
 }
 
 export type ConversionPlanResult = ConversionPlan | ConversionPlanFailure;
@@ -168,9 +195,10 @@ export function planConversion(inputPath: string, options: PlanOptions): Convers
       source: loaded.source,
       sourceRoot: undefined,
       sourceContractFailed: isSourceContractFailure(loaded.selection),
+      ...(loaded.codexSidecar === undefined ? {} : { codexSidecar: loaded.codexSidecar }),
       issues: loaded.issues.map((issue) =>
         staged(
-          'SOURCE',
+          toConversionStage(issue.stage),
           issue.code,
           issue.message,
           issue.details === undefined ? undefined : issue.details,
@@ -332,6 +360,7 @@ export function planConversion(inputPath: string, options: PlanOptions): Convers
     resources,
     plannedPaths,
     preservedSemantics,
+    ...(loaded.codexSidecar === undefined ? {} : { codexSidecar: loaded.codexSidecar }),
     issues: [],
   };
 }

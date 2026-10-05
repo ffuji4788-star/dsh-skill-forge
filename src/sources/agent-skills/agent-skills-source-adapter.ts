@@ -37,7 +37,7 @@ import type {
   SourceLoadResult,
 } from '../../conversion/source-adapter.js';
 import { SkillInputError } from '../../utils/errors.js';
-import { AGENT_SKILLS_ENTRY_NAMES } from './agent-skills-contract.js';
+import { AGENT_SKILLS_ENTRY_NAMES, AGENT_SKILLS_SOURCE_ID } from './agent-skills-contract.js';
 import { validateAgentSkillFrontmatter } from './agent-skills-validator.js';
 
 /** Codes for problems with the package itself, as opposed to its frontmatter. */
@@ -146,11 +146,17 @@ export function findAgentSkillEntry(directory: string): string | undefined {
  *
  * @param inputPath Directory to read; relative paths resolve against `cwd`.
  * @param cwd Directory used to resolve a relative input path.
+ * @param sourceId Source identifier to report, for a profile that reuses this
+ *   package contract under its own name. Defaults to the Agent Skills source.
  * @returns The parsed skill, or a refusal listing every source issue.
  * @throws SkillInputError when the path is missing or unreadable.
  */
-export function loadAgentSkill(inputPath: string, cwd: string): SourceLoadResult {
-  const source = 'agent-skills';
+export function loadAgentSkill(
+  inputPath: string,
+  cwd: string,
+  sourceId: string = AGENT_SKILLS_SOURCE_ID,
+): SourceLoadResult {
+  const source = sourceId;
   const resolved = path.resolve(cwd, inputPath);
   const stats = statOrThrow(resolved);
 

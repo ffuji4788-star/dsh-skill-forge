@@ -1,0 +1,9 @@
+interface:
+  display_name: 'Dependency Skill'
+dependencies:
+  tools:
+    - type: 'mcp'
+      value: 'example-server'
+      description: 'Example MCP server'
+      transport: 'streamable_http'
+      url: 'https://example.invalid/mcp/'

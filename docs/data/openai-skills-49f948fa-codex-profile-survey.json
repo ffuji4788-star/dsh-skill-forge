@@ -1,0 +1,1302 @@
+{
+  "repository": "https://github.com/openai/skills",
+  "commit": "49f948faa9258a0c61caceaf225e179651397431",
+  "surveyRoot": "skills",
+  "collections": [
+    ".curated",
+    ".system"
+  ],
+  "skillCount": 44,
+  "summary": {
+    "total": 44,
+    "convertible": 27,
+    "refused": 17,
+    "sourceInvalid": 0,
+    "absent": 0,
+    "interfaceOnly": 27,
+    "behavioural": 17,
+    "unreadable": 0,
+    "withDependencies": 17,
+    "withPolicy": 1,
+    "behaviouralUnion": 17,
+    "withLicenseFrontmatter": 0,
+    "overDescriptionLimit": 0,
+    "unknownSidecarKeys": 0
+  },
+  "skills": [
+    {
+      "name": "aspnet-core",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "803979c258908f2e575196295c119001817673e3bbf9babf54f5c24a41ac3328",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 376,
+      "sidecarPresent": true,
+      "sidecarSha256": "2b4e9cb18dc6f3a64bfe1add4a139c41ca09ef4a4dd1c6931602c24e5c82102f",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 17,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "chatgpt-apps",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "928530dd05490d9cd38a8935c824049c5f562422a1bcaa2516ff3032d524ee44",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 449,
+      "sidecarPresent": true,
+      "sidecarSha256": "c126d350e70b56a26d7b9942bf94b5d99d6972f0b361e1a068b2c04b26242b60",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface",
+        "policy"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 11,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_BEHAVIOR",
+          "fields": [
+            "allow_implicit_invocation"
+          ]
+        },
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cli-creator",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "cadfb50f883f1214654875b00c03096449ed8c365afd9bcae26d66789c28cf9e",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 334,
+      "sidecarPresent": true,
+      "sidecarSha256": "ce9ffc78df8de1e26e83e95a0a7145318ccd2361527bfc75f2a5d0e600991563",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 4,
+      "resourceDirectories": [
+        "agents",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "cloudflare-deploy",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "30d345ed3affdc61fcfc51cc5dbab977659bb4839f79363bc5f4869b674d4be4",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 189,
+      "sidecarPresent": true,
+      "sidecarSha256": "ef399f710396091ac3d19b176a48a06316f15ff4246f154e2f5badff96f60cbb",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 312,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "define-goal",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "1fd133616107ced158475074de162d9fb80acac2f49b08cd6ad4c9570871c9fd",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 380,
+      "sidecarPresent": true,
+      "sidecarSha256": "0ac0d50db6e4df558012aa849f264a76cd0899392950b7626a93972526d3acd2",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 3,
+      "resourceDirectories": [
+        "agents"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "figma",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "132f90f8ebe18a1579ac3aa45b78f3bccb6b96ff3cd0942b50aec79edd6fb04d",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 269,
+      "sidecarPresent": true,
+      "sidecarSha256": "b516c342338ac9f21fe37107e9f8f63e6d740865b09de9a4b5d597c465b7a39e",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-code-connect-components",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "8b016c4e45247bbc02122a2827e303660d454f710cb2179732a3f54f6016ecf0",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 364,
+      "sidecarPresent": true,
+      "sidecarSha256": "820dc93971991423b9b8b08d31e2e5348c8e54fedc2316a611761ee726599f13",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-create-design-system-rules",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "a4717512addcae1e869ed8f21c4dbcea8276570ace415496cda3d9549a8256ae",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 322,
+      "sidecarPresent": true,
+      "sidecarSha256": "63ae475a11611d4f92cd876501ed47e03ff0b571eccd20daf63e484b751c02dd",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-create-new-file",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "8fc3e90f05db3c028107279115005c660efa02d3cd7326d607cc1f808df78121",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 305,
+      "sidecarPresent": true,
+      "sidecarSha256": "f6b829141e109aaa0a90ad204c9312db94fab055881cca3cd88365295fedce01",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 7,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-generate-design",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "8820e9c330345e801549f0bf6d2a1274abba6e4322bae02b9242d634c00cca2f",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 703,
+      "sidecarPresent": true,
+      "sidecarSha256": "c162c02c9fbffc3e5fe6fbae2ff749d5640170245e4dd29b6e6083c7e404803f",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 7,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-generate-library",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "365803356b14e83b1062157d471a28b69672874997fc2bf8fe12a918f042d58a",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 425,
+      "sidecarPresent": true,
+      "sidecarSha256": "5bc5fdf2b854f81457cb2041e3352fae0305aad82128a48452f490fcf5266526",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 23,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-implement-design",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "da1a3b54b179d975a14532d6b0b7def1a59f93984481203449516107e3713388",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 345,
+      "sidecarPresent": true,
+      "sidecarSha256": "272760cd71dffa9c0435dcb4a5c4d68be9a8e186586342a8aa105b9ebbaefbad",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "figma-use",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "504ade6e3c5dbdde720600bb4be8a041fc6c50e86883cb5a2638651cc723002e",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 546,
+      "sidecarPresent": true,
+      "sidecarSha256": "ad04bc076276b4c15d4789487078fd89df73ea2185c0a9fab6d24da60d75c5ef",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 29,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gh-address-comments",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "947b0bcea8f1649d46b07dcdeeff6e0b294002093e7d2ce39aa026e05bb5add6",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 168,
+      "sidecarPresent": true,
+      "sidecarSha256": "8ce528d93f6d13fbee03ab126356181b718baf4844801cb5d94a6715ad81598d",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "gh-fix-ci",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "2e45c71cdf8690b54639c1b7aa6e4401f5db557c45b283e213d4f793cc570661",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 313,
+      "sidecarPresent": true,
+      "sidecarSha256": "f8c8e7d674549c9d483492f7934a3499686e9504c4ab99d8494ae4c8ee89c9ef",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "hatch-pet",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "a4ba304ec6370d4b4e73d0fdf2c20789bf1b477f84621f410842e0c4a714f8bb",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 572,
+      "sidecarPresent": true,
+      "sidecarSha256": "ce07f8aa68ffc189fd691e2f4c5fb3604b8949038f5952a970dc3806c1b463e4",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 14,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "jupyter-notebook",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "a2ed923c4af32d850eff94df5297a358654e966c8bcd526c6718d26921a87931",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 237,
+      "sidecarPresent": true,
+      "sidecarSha256": "90152c3fe3519d2698c4206b739f9ed73150eb32c0b6dace8c47920149de4713",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 12,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "linear",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "e73d867c380f011fa681f6a9cca66e550643c9b5e8d91c901e2fe8e6ab785967",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 121,
+      "sidecarPresent": true,
+      "sidecarSha256": "9e561114fb7b22dd75e162d4eaf0be30a8c44e2c632fc91ba373ca2d7b035c7e",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "migrate-to-codex",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "b41905a5b7f0bee55ac4fcd372fdd9c5f0641378e56731b34ad283e4d1bbf872",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 104,
+      "sidecarPresent": true,
+      "sidecarSha256": "38da1ace2207fcebd561da688fb153cebcd89e0684f3f6beffd56eccf4b593be",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 19,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "netlify-deploy",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "34ded49fb82fe5fc66f390947eba58e50436184d8b0584154612c1d021438f15",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 192,
+      "sidecarPresent": true,
+      "sidecarSha256": "d240a3ffad68d9f3798d97f514a07a42fb8c8cb56455e4e15497a9cf6135c717",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "notion-knowledge-capture",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "8bdbd77915e79bcd6b7ffff5ad16fabfda3742fe3e67ece0b666d399e80116a8",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 162,
+      "sidecarPresent": true,
+      "sidecarSha256": "da924e9970998fa7b7fad1820ef452e79a4cf49d9349fb5493f0e7cc72a839ab",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 18,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "evaluations",
+        "examples",
+        "reference"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notion-meeting-intelligence",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "e987b7afcd790dabeceebce945481408b325278f5e4626de4fe890231872f914",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 159,
+      "sidecarPresent": true,
+      "sidecarSha256": "478b4ea2da14616ca123d614074c69a45279e261b4321caca5d240358a29698e",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 19,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "evaluations",
+        "examples",
+        "reference"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notion-research-documentation",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "c4d7466c789ad987151a292fce3e042581082fc8193bd1940ca4fdfe15f98e5e",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 180,
+      "sidecarPresent": true,
+      "sidecarSha256": "4b73e5bafdc97953b87bab962731bda13c22877c7f378329effa7cb2ebf478b4",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 23,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "evaluations",
+        "examples",
+        "reference"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notion-spec-to-implementation",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "491d631a76ac5279d9a6ed7b2c59b8bef4d283cee0c16248581fb6bf0c291cc5",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 160,
+      "sidecarPresent": true,
+      "sidecarSha256": "4d2b6f512a38c6fe348cb286a6873fb3bef3a21624a0f2d1435ea33eba3f62ee",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 19,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "evaluations",
+        "examples",
+        "reference"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "openai-docs",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "90476c00fc121e2112835e748c92f5d33bb95f3026438b68d5913e30e2e42bbd",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 447,
+      "sidecarPresent": true,
+      "sidecarSha256": "e720e8def05cee556a360d0e5a97a1bf191ce6d8ec65a7a51292566c18bb181d",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 10,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pdf",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "724b72c932053fd87133144405b00fbeec30285ee770168328c8f591ec89c134",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 248,
+      "sidecarPresent": true,
+      "sidecarSha256": "48d488770edf103fa945b20a70834a135c224e949d772b502ea992ea03120cf6",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 4,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "playwright",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "c52cc95125b720cdc3c9829b0294c2752d4ae9b85a5282aa153da8bba929af87",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 209,
+      "sidecarPresent": true,
+      "sidecarSha256": "dfc22e6c764f025e5e520fe2e1781e119f6262f406feddafe84ff8aaf9a4ff21",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 9,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "playwright-interactive",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "5b143fbf51ac867d39708f1c99908bb08ac6e9e856c3e5d48329ee607331b014",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 94,
+      "sidecarPresent": true,
+      "sidecarSha256": "b48241379f0b6865e053c73c4fafe5e4320a57713e842bb8623cd65da1fb7d68",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "render-deploy",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "e785be3b5ab4b418a1d51c19d8d9208830fa62d0dc19555e7a0b36248b345db4",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 229,
+      "sidecarPresent": true,
+      "sidecarSha256": "4cdbb901919cc8bd4a1e346b47c5a4582750ab19c78e7aa22b0625e87823c45f",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 21,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "screenshot",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "2fb7b2d8010517699b1a44f1d587d028b9dad2e2770366d2052238d46c9a9e36",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 220,
+      "sidecarPresent": true,
+      "sidecarSha256": "319c0acde4cb8c46809f4679cde2379bcb4198eed322ff7dc89d21cd4b6f7f78",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 11,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "security-best-practices",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "7a889544c0ae67982a918a4b28569cc93f7426ae39306a0cb786603445714162",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 385,
+      "sidecarPresent": true,
+      "sidecarSha256": "53417b99f51611f1df76d35955cdce41250bdac358fb290d4a0fb266febd623c",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 13,
+      "resourceDirectories": [
+        "agents",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "security-ownership-map",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "f855af8ef91e173adf931c82b0fe21931d5e32b661eeb3d95fed18df46c0ef6e",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 532,
+      "sidecarPresent": true,
+      "sidecarSha256": "07422e5fa4aad415598f242c7d049b1406eaefbbadbeefeba4bb5aece3414140",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "security-threat-model",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "7718bb4d7d9855cdf2e90e920e0cbc489cb24ea55e2f9734fd041c53f1e04f68",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 412,
+      "sidecarPresent": true,
+      "sidecarSha256": "4ecdcfa33596d702b1cea1a3c2c5416cf78fba92e978ec37125bc2cd324b8904",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "agents",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "sentry",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "020211a5c198ff0354e268f9d5ff75990c990acc24894ad56b9b12dc7b0a5d7e",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 201,
+      "sidecarPresent": true,
+      "sidecarSha256": "1f78c906ba246985f1df1b2429ebfbde79579de14bee293fa0b8ef413b2c3639",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "speech",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "e71cd464d98745e8d51a6cc3b59630a34dbd2553e9db9cdf8dc59247abc754f4",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 309,
+      "sidecarPresent": true,
+      "sidecarSha256": "4f2c067afd32419cf771a754c8ef28c0bd11e42eee7ba1865e3476ab91bbfc3c",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 16,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "transcribe",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "2eaae81b9a63f877e4028e640b0066288c4b7c05c75f6b8e380570a81432ef47",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 216,
+      "sidecarPresent": true,
+      "sidecarSha256": "3b020e69b7b97ffe312a6c57bd023ed50fe2153306af3f699ffd2d570667b675",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 7,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "vercel-deploy",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "afac6b5b71952af08f8dcd19c01ec1d80a040240cc50929e3add8200b3fcd459",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 194,
+      "sidecarPresent": true,
+      "sidecarSha256": "056e5eddfdd9b9b506b8175c902745a715ccada6fcb8409af1aad9e868de40a1",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "winui-app",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "69e4e697a60403b587b4eb36c8fa2d3699f4943ed66747bce268828a5ef9de4c",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 532,
+      "sidecarPresent": true,
+      "sidecarSha256": "7975c0416041d64f9137c323edf24ba9dc992bcc8dc68767202aaa7e3739f08a",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 21,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "yeet",
+      "collection": ".curated",
+      "entryFile": "SKILL.md",
+      "entrySha256": "14422e979fd275a18b14c173be7284123aebdcd092b5cc1acc001d757f720e62",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 134,
+      "sidecarPresent": true,
+      "sidecarSha256": "502574addf33603d3fc554b3621915a742986a2dd8a12aea3d06b5545907d5f3",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "agents",
+        "assets"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "imagegen",
+      "collection": ".system",
+      "entryFile": "SKILL.md",
+      "entrySha256": "1c3860b6eb079badaceaa2a5792fd26f23a258dc8fa2a04d1677d8d9b8022763",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 570,
+      "sidecarPresent": true,
+      "sidecarSha256": "07f29c94a51e3e4471750574966d3ef56b98b86c78da3a0abf0a7281733c8dcb",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 11,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "openai-docs",
+      "collection": ".system",
+      "entryFile": "SKILL.md",
+      "entrySha256": "117e696f80607076f63887f4f892418f38b6af4c56ccf2b6e50e1dd1a4871da4",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 447,
+      "sidecarPresent": true,
+      "sidecarSha256": "e720e8def05cee556a360d0e5a97a1bf191ce6d8ec65a7a51292566c18bb181d",
+      "sidecarTopLevelKeys": [
+        "dependencies",
+        "interface"
+      ],
+      "classification": "BEHAVIOURAL",
+      "resourceFiles": 10,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "references",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_CODEX_DEPENDENCY",
+          "fields": [
+            "tools"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plugin-creator",
+      "collection": ".system",
+      "entryFile": "SKILL.md",
+      "entrySha256": "d7c5a754c137d2e5e6924f998e35c0c88c4a051a38024e92fae90003caf58e82",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "descriptionLength": 397,
+      "sidecarPresent": true,
+      "sidecarSha256": "8b734948e71277f03e157cf7a6e5b3dc7861a4f0d730f75fc5d5e9b906672b7d",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "skill-creator",
+      "collection": ".system",
+      "entryFile": "SKILL.md",
+      "entrySha256": "02167b0ecf9f17bb3d2e3395c3d20fe0c356e4edc57a99fc3ad8a82ef82ccfe2",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 225,
+      "sidecarPresent": true,
+      "sidecarSha256": "12320aea5ce395439490daeb85311d70b05d199052725a4a27c3d59d5c149bda",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 7,
+      "resourceDirectories": [
+        "agents",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "skill-installer",
+      "collection": ".system",
+      "entryFile": "SKILL.md",
+      "entrySha256": "1d487e6d3635ab1112287ee5d2a2186951ca2e5848c82ba0122be5da19d25680",
+      "frontmatterKeys": [
+        "description",
+        "metadata",
+        "name"
+      ],
+      "descriptionLength": 225,
+      "sidecarPresent": true,
+      "sidecarSha256": "bd64b4d6893138706b3e3540f266ab809ccdcd08375652ae9f9d1e029fe50d02",
+      "sidecarTopLevelKeys": [
+        "interface"
+      ],
+      "classification": "INTERFACE_ONLY",
+      "resourceFiles": 8,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    }
+  ]
+}

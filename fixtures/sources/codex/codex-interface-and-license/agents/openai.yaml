@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Interface And License'
+  short_description: 'Carries both a sidecar and a license'

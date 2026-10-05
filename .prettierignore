@@ -9,3 +9,9 @@ pnpm-lock.yaml
 # would also destroy the point of committing it: a previously committed snapshot
 # must stay byte-identical to prove it was not rewritten.
 docs/data/
+# Codex product sidecars used as fixtures. Their *formatting* is the test subject:
+# the conversion must copy the file byte-for-byte, so a deliberately irregular
+# layout (odd indentation, double quotes, trailing comments, blank lines) is the
+# evidence that nothing re-serializes it. A formatter that rewrote them would
+# quietly weaken that test, so they are excluded rather than normalized.
+fixtures/sources/codex/*/agents/openai.yaml

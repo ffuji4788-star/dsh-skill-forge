@@ -66,6 +66,26 @@ export {
   type DshPreservationEnvelope,
   type MetadataBuildProblem,
 } from './targets/dsh/dsh-metadata-envelope.js';
+export {
+  CODEX_BEHAVIOURAL_KEYS,
+  CODEX_CODES,
+  CODEX_SIDECAR_BASENAME,
+  CODEX_SIDECAR_DIRECTORY,
+  CODEX_SIDECAR_KNOWN_KEYS,
+  CODEX_SKILLS_COMMIT,
+  CODEX_SKILLS_REPOSITORY,
+  CODEX_SOURCE_ID,
+  CODEX_SOURCE_NAME,
+  CODEX_UPSTREAM_COMMIT,
+  CODEX_UPSTREAM_REPOSITORY,
+  codexSkillsReference,
+  codexUpstreamReference,
+  findCodexSidecar,
+  inspectCodexSidecar,
+  type CodexSidecarInspection,
+  type CodexSidecarKind,
+} from './sources/codex/codex-contract.js';
+export { loadCodexSkill } from './sources/codex/codex-source-adapter.js';
 export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
 export {
   assessSkill,

@@ -8,6 +8,10 @@
  *
  * A source is only ever consulted when the user asks for it. Omitting `--source`
  * keeps the generic local path, whose behaviour is unchanged.
+ *
+ * Phase 10 adds `codex` as a *profile* rather than a fourth implementation: it
+ * composes the Agent Skills package contract and adds only the sidecar check, so
+ * the two share one parser, one validator and one resource walker.
  */
 import path from 'node:path';
 
@@ -16,6 +20,8 @@ import type { PortableSemantics } from '../ir/portable-semantics.js';
 import type { ParsedSkill } from '../schemas/skill.js';
 import { loadAgentSkill } from '../sources/agent-skills/agent-skills-source-adapter.js';
 import { AGENT_SKILLS_SOURCE_ID } from '../sources/agent-skills/agent-skills-contract.js';
+import { CODEX_SOURCE_ID } from '../sources/codex/codex-contract.js';
+import { loadCodexSkill } from '../sources/codex/codex-source-adapter.js';
 
 /** Source selected when `--source` is omitted: the previous generic behaviour. */
 export const GENERIC_LOCAL_SOURCE_ID = 'generic-local';
@@ -24,6 +30,7 @@ export const GENERIC_LOCAL_SOURCE_ID = 'generic-local';
 export const AVAILABLE_SOURCE_IDS: readonly string[] = [
   GENERIC_LOCAL_SOURCE_ID,
   AGENT_SKILLS_SOURCE_ID,
+  CODEX_SOURCE_ID,
 ];
 
 /** How serious a source finding is. */
@@ -36,16 +43,27 @@ export interface SourceIssue {
   readonly message: string;
   /** Optional list rendered under the message, for example failing field names. */
   readonly details?: readonly string[];
+  /**
+   * Assessment stage this finding belongs to.
+   *
+   * Defaults to `SOURCE`. A profile may set it when the *package* is valid but
+   * something it declares cannot be expressed by the target — that is a semantic
+   * gap, not a broken source, and reporting it as a source failure would tell the
+   * user their skill is malformed when it is not.
+   */
+  readonly stage?: string;
 }
 
 /**
  * Which layer refused a source.
  *
  * `selection` means the source name or package shape was wrong, `source-contract`
- * means the package violated the named source's own rules, and `generic`
- * describes a skill read without a source adapter.
+ * means the package violated the named source's own rules, `target-support` means
+ * the package is valid but declares something this target cannot express, and
+ * `generic` describes a skill read without a source adapter.
  */
-export type SourceSelection = 'selection' | 'package-shape' | 'source-contract' | 'generic';
+export type SourceSelection =
+  'selection' | 'package-shape' | 'source-contract' | 'target-support' | 'generic';
 
 /** A source that could not be read as a skill. */
 export interface SourceFailure {
@@ -54,6 +72,11 @@ export interface SourceFailure {
   readonly source: string;
   readonly issues: readonly SourceIssue[];
   readonly selection: SourceSelection;
+  /**
+   * Which optional product sidecar the package carried, when a profile inspected
+   * one before refusing. Absent for a source with no sidecar concept.
+   */
+  readonly codexSidecar?: string;
 }
 
 /** A source that was read and satisfies its own contract. */
@@ -81,6 +104,16 @@ export interface SourceSuccess {
    * layer refuses to guess.
    */
   readonly semantics?: PortableSemantics;
+  /**
+   * Which optional product sidecar the package carried.
+   *
+   * Reported by a *profile* that reuses a package contract under its own name —
+   * currently only `codex`, whose `agents/openai.yaml` is either absent, present
+   * but presentation-only, or behavioural (which is a refusal, so it never reaches
+   * a successful load). The value is a derived classification, never sidecar
+   * content.
+   */
+  readonly codexSidecar?: string;
 }
 
 export type SourceLoadResult = SourceSuccess | SourceFailure;
@@ -113,7 +146,6 @@ function selectionFailure(source: string, message: string): SourceFailure {
 
 /**
  * Reads a skill through the generic local path.
- *
  * The generic importer resolves the entry itself: a missing path, an unreadable
  * path, malformed YAML and an ambiguous directory all stay fatal, exactly as they
  * were before a source adapter existed. Only a named source adapter turns those
@@ -158,6 +190,10 @@ export function loadSourceSkill(
 
   if (source === GENERIC_LOCAL_SOURCE_ID) {
     return loadGenericSkill(inputPath, cwd);
+  }
+
+  if (source === CODEX_SOURCE_ID) {
+    return loadCodexSkill(inputPath, cwd);
   }
 
   return loadAgentSkill(inputPath, cwd);

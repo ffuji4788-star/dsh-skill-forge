@@ -41,7 +41,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "survey:agent-skills": "tsx scripts/survey-agent-skills-corpus.run.ts"
+    "survey:agent-skills": "tsx scripts/survey-agent-skills-corpus.run.ts",
+    "survey:codex": "tsx scripts/survey-codex-corpus.run.ts"
   },
   "dependencies": {
     "commander": "^14.0.3",

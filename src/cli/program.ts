@@ -10,6 +10,7 @@
  */
 import { Command } from 'commander';
 
+import { AVAILABLE_SOURCE_IDS } from '../conversion/source-adapter.js';
 import { EXIT_SUCCESS, EXIT_VALIDATION_FAILED } from '../utils/exit-codes.js';
 import { describeNodeRequirement, readPackageInfo } from '../utils/package-info.js';
 import { runAnalyze } from './analyze-command.js';
@@ -164,7 +165,10 @@ export function createProgram(
     .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
     .usage('<path>')
     .option('--ir-version <version>', 'IR schema version to emit; defaults to 1')
-    .option('--source <source>', 'Explicit source adapter; omit for the generic local path')
+    .option(
+      '--source <source>',
+      `Explicit source adapter (${AVAILABLE_SOURCE_IDS.join(', ')}); omit for the generic local path`,
+    )
     .action(
       (inputPath: string | undefined, commandOptions: { irVersion?: string; source?: string }) => {
         if (inputPath === undefined || inputPath.length === 0) {
@@ -202,7 +206,10 @@ export function createProgram(
     .description('Report whether a skill would convert, without writing anything.')
     .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
     .usage('<path>')
-    .option('--source <source>', 'Explicit source adapter; omit for the generic local path')
+    .option(
+      '--source <source>',
+      `Explicit source adapter (${AVAILABLE_SOURCE_IDS.join(', ')}); omit for the generic local path`,
+    )
     .requiredOption('--target <target>', 'Assessment target; only "dsh" is supported')
     .action(
       (inputPath: string | undefined, commandOptions: { source?: string; target: string }) => {
@@ -224,7 +231,10 @@ export function createProgram(
     .description('Convert a local skill into a pinned-target package. Nothing is executed.')
     .argument('[path]', 'Path to a SKILL.md file or a directory containing one')
     .usage('<path>')
-    .option('--source <source>', 'Explicit source adapter; omit for the generic local path')
+    .option(
+      '--source <source>',
+      `Explicit source adapter (${AVAILABLE_SOURCE_IDS.join(', ')}); omit for the generic local path`,
+    )
     .requiredOption('--target <target>', 'Conversion target; only "dsh" is supported')
     .requiredOption('--out <directory>', 'Output directory; must not already exist')
     .action(

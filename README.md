@@ -432,15 +432,15 @@ entry is `SKILL.md` (then `skill.md`); a bare Markdown file is refused rather th
 silently read as something else.
 
 **Currently supported lossless subset: `name`, `description`, `instructions` and
-`resources`.**
+`resources`, plus `license` and `metadata` as described below.**
 
-The optional Agent Skills fields — `license`, `compatibility`, `metadata` and
-`allowed-tools` — are validated and preserved verbatim in the IR's
-`source.extraFrontmatter`, but **conversion to DSH is currently refused** with
-`UNMAPPED_SOURCE_FRONTMATTER` rather than dropping or guessing them. Mapping
-`compatibility` onto a DSH field, or assuming a source `metadata` key means what a
-same-named DSH key means, would be a guess; that mapping needs a later phase. A
-skill therefore converts when its frontmatter is exactly `name` and `description`.
+`metadata` is carried into the DSH frontmatter verbatim. `license` is **preserved
+opaquely** in a tool-owned envelope — see
+[License preservation](#license-preservation). `compatibility` is still refused
+with `UNSUPPORTED_TARGET_SEMANTIC` because it describes runtime requirements, and
+`allowed-tools` is still refused with `UNMAPPED_SOURCE_FRONTMATTER` because it is a
+permission vocabulary rather than package information. Neither is dropped or
+guessed at.
 
 Source validation and generic IR validation are separate, and they can disagree. A
 name like `数据处理` is a valid Agent Skills name but is outside what Universal
@@ -450,6 +450,61 @@ defect.
 
 Full rules, including every documented divergence between the standard, its
 reference validator and Anthropic's helper: [docs/agent-skills-source-contract.md](./docs/agent-skills-source-contract.md).
+
+### Codex source profile
+
+An OpenAI Codex skill can be read explicitly:
+
+```bash
+dsh-forge assess ./my-codex-skill --source codex --target dsh
+
+dsh-forge convert ./my-codex-skill \
+  --source codex \
+  --target dsh \
+  --out ./converted
+```
+
+**Codex is not a separate package format.** A Codex skill is an Agent Skills
+package plus one optional product file, `agents/openai.yaml`, so `--source codex`
+**reuses the Agent Skills core handling** — the same parser, validator, entry
+resolution and resource walker — and adds only the sidecar check. There is no
+second adapter.
+
+| `agents/openai.yaml`        | Result                                         |
+| --------------------------- | ---------------------------------------------- |
+| absent                      | converts as an ordinary Agent Skills package   |
+| `interface` only            | **converts**; the file is copied byte-for-byte |
+| `policy` present            | **refused**: `UNSUPPORTED_CODEX_BEHAVIOR`      |
+| `dependencies` present      | **refused**: `UNSUPPORTED_CODEX_DEPENDENCY`    |
+| unreadable or not a mapping | **refused**: `INVALID_CODEX_SIDECAR`           |
+
+`interface` is UI presentation — a display name, icons, a brand colour, a
+suggested prompt. It decides nothing about instructions, routing, permissions or
+invocation, so it is carried **opaquely**: the original file is copied
+byte-for-byte and never parsed and re-emitted, which keeps its comments, quoting
+and key order intact. DSH does not interpret it, and nothing here claims it does.
+
+`policy` and `dependencies` are **behavioural** — implicit invocation and runtime
+tool requirements. The target has no equivalent, so carrying them would silently
+change what a skill means. They are refused whole; there is no partial conversion.
+
+A behavioural or unreadable sidecar is reported as a **target-support** refusal,
+not a broken package: the assessment shows `Source Contract: PASS` with
+`Semantics: REFUSED`, because the skill is valid Codex and the _target_ cannot
+express what it declares.
+
+**No network, no installation.** A dependency URL in a sidecar is parsed data. It
+is never fetched, probed, connected to, or MCP-installed, and never executed.
+
+Invalid `interface` values follow the pinned runtime rather than authoring advice:
+Codex warns and drops a bad icon or brand colour instead of failing, so this
+profile does not treat any interface value as an error, and does not promote the
+documentation's style recommendations into validation.
+
+- [docs/codex-source-contract.md](./docs/codex-source-contract.md) — the full
+  contract, the four sources it distinguishes, and the pins.
+- [docs/codex-source-profile-survey.md](./docs/codex-source-profile-survey.md) —
+  what happened on 44 real Codex skills.
 
 This is **not** a claim that every Claude skill converts automatically. There is
 one source adapter, no adapter registry, and no automatic detection.

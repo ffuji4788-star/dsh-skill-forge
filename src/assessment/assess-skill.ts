@@ -47,6 +47,14 @@ export interface AssessmentResult {
    * without being told the target understands it.
    */
   readonly preservedSemantics: readonly string[];
+  /**
+   * Which optional product sidecar the package carried.
+   *
+   * `undefined` when the source has no sidecar concept. Reported so a reader can
+   * see that a Codex package's presentation config was accepted for opaque
+   * preservation, or that a behavioural one refused the conversion.
+   */
+  readonly codexSidecar?: string;
 }
 
 export interface AssessOptions {
@@ -109,6 +117,7 @@ export function assessSkill(inputPath: string, options: AssessOptions): Assessme
     },
     issues,
     preservedSemantics: plan.ok ? Object.keys(plan.preservedSemantics).sort() : [],
+    ...(plan.codexSidecar === undefined ? {} : { codexSidecar: plan.codexSidecar }),
   };
 }
 
@@ -157,6 +166,17 @@ export function renderAssessmentReport(result: AssessmentResult): string {
       ...result.preservedSemantics.map((field) => `  ${field}`),
       '  (carried verbatim in a tool-owned envelope; the target does not interpret it)',
     );
+  }
+
+  if (result.codexSidecar !== undefined) {
+    lines.push('', 'Codex Sidecar:', result.codexSidecar);
+    if (result.codexSidecar === 'INTERFACE_ONLY') {
+      lines.push('  (presentation metadata only; the file is carried byte-for-byte)');
+    } else if (result.codexSidecar === 'BEHAVIOURAL') {
+      lines.push('  (declares behaviour the target cannot express; see the issues below)');
+    } else if (result.codexSidecar === 'UNREADABLE') {
+      lines.push('  (the file could not be read as product configuration; see the issues below)');
+    }
   }
 
   if (result.issues.length > 0) {
