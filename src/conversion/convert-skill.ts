@@ -1,10 +1,11 @@
 /**
- * Converts Universal Skill IR v1 into a DeepSeek Harness skill package.
+ * Converts a skill into a DeepSeek Harness skill package.
  *
  * Guarantees, in order of importance:
  *
- * - **Lossless or refused.** Any non-core source frontmatter refuses the
- *   conversion; nothing is dropped or guessed at, and there is no lossy flag.
+ * - **Lossless or refused.** A source value the target cannot carry faithfully
+ *   refuses the conversion; nothing is dropped or guessed at, and there is no
+ *   lossy flag.
  * - **Non-destructive.** An existing output path is refused. There is no
  *   `--force`.
  * - **Atomic.** The package is written to a staging directory beside the output,
@@ -12,6 +13,10 @@
  *   no output and cleans its staging directory.
  * - **Offline and inert.** No network, no subprocess, no resource execution, no
  *   writes anywhere except staging and the final output.
+ *
+ * Every decision about *whether* a skill converts lives in
+ * {@link planConversion}, which this module shares with `assess`. This file only
+ * adds the output-path checks and the write.
  */
 import {
   existsSync,
@@ -24,15 +29,14 @@ import {
 } from 'node:fs';
 import path from 'node:path';
 
+import { planConversion } from './conversion-plan.js';
+import { collectResources } from './resource-collector.js';
 import {
   buildConversionResult,
   CONVERSION_CODES,
   type ConversionIssue,
   type ConversionResult,
 } from '../schemas/conversion.js';
-import { toSkillIRV2, type SourceProvenance } from '../ir/normalize-skill-v2.js';
-import { SkillIRError } from '../ir/normalize-skill.js';
-import { GENERIC_LOCAL_SKILL_FORMAT, type SkillIRV2 } from '../ir/skill-ir-v2.js';
 import { validateDshCompatibility } from '../targets/dsh/dsh-compatibility-validator.js';
 import {
   DSH_CONTRACT_VERIFIED_AT,
@@ -40,24 +44,14 @@ import {
   DSH_UPSTREAM_COMMIT,
   DSH_UPSTREAM_REPOSITORY,
 } from '../targets/dsh/dsh-contract.js';
-import {
-  renderDshSkillMarkdownV2,
-  unsupportedDshSemantics,
-} from '../targets/dsh/dsh-target-adapter.js';
 import { agentSkillsUpstreamReference } from '../sources/agent-skills/agent-skills-contract.js';
 import { loadLocalSkill } from '../importers/local-importer.js';
 import { validateBasicSkill } from '../validators/basic-skill-validator.js';
 import { isAtOrBelow, isPathWithin } from '../utils/path-boundary.js';
-import { collectResources } from './resource-collector.js';
-import {
-  GENERIC_LOCAL_SOURCE_ID,
-  loadSourceSkill,
-  SOURCE_CODES,
-  type SourceIssue,
-} from './source-adapter.js';
+import { GENERIC_LOCAL_SOURCE_ID } from './source-adapter.js';
+import { SUPPORTED_TARGET } from './target-id.js';
 
-/** The only target this project supports. */
-export const SUPPORTED_TARGET = 'dsh';
+export { SUPPORTED_TARGET };
 
 /** The short upstream reference a converted package is measured against. */
 export function targetContractReference(): string {
@@ -70,27 +64,9 @@ export interface ConvertOptions {
   readonly cwd?: string;
   /**
    * Source adapter to read the skill with. `undefined` uses the generic local
-   * path, which is exactly the behaviour Phase 5 had.
+   * path.
    */
   readonly source?: string;
-}
-
-/**
- * Converts a source issue into a conversion issue.
- *
- * @param issues Source findings.
- */
-function toConversionIssues(issues: readonly SourceIssue[]): ConversionIssue[] {
-  return issues.map((issue) =>
-    issue.details === undefined
-      ? { code: issue.code, severity: issue.severity, message: issue.message }
-      : {
-          code: issue.code,
-          severity: issue.severity,
-          message: issue.message,
-          details: issue.details,
-        },
-  );
 }
 
 /** Everything a caller needs to report a conversion. */
@@ -103,7 +79,7 @@ export interface ConvertOutcome {
   readonly target: string;
   /**
    * Source adapter that was used. `generic-local` means no `--source` was given,
-   * which is the unchanged Phase 5 behaviour.
+   * which is the unchanged default behaviour.
    */
   readonly source: string;
   /** Rendered plan preview, used by the report. */
@@ -163,13 +139,13 @@ function renameWithRetry(stagingDirectory: string, finalDirectory: string): void
 }
 
 /**
- * Converts a local skill into a DSH package.
+ * Converts a skill into a DSH package.
  *
  * @param inputPath Source skill file or directory.
  * @param outputPath Destination directory. Must not exist and must not be inside
  *   the source skill.
  * @param target Requested target; only `dsh` is supported.
- * @param options Directory used to resolve the source path.
+ * @param options Directory used to resolve the source path, and the source adapter.
  * @returns The outcome, including whether anything was written.
  * @throws SkillInputError, AmbiguousSkillError or FrontmatterError for fatal input.
  */
@@ -186,37 +162,42 @@ export function convertSkillToTarget(
     sourceRoot: cwd,
     outputDirectory: absoluteOutput,
     target,
-    // Recorded before the source is resolved, so a failed selection is still
-    // reported against the source the user asked for.
     source: options.source ?? GENERIC_LOCAL_SOURCE_ID,
     writtenPaths: [] as readonly string[],
   };
 
+  // The target is checked before anything is read, so an unsupported target is
+  // reported even when the input path does not exist.
   if (target !== SUPPORTED_TARGET) {
     return refusal(base, [
       error(
-        CONVERSION_CODES.unsupportedResource,
+        CONVERSION_CODES.unsupportedTarget,
         `Unsupported target "${target}": this project can only convert to "${SUPPORTED_TARGET}"`,
       ),
     ]);
   }
 
-  // The source is resolved through the selected adapter. A refusal here is a
-  // deterministic outcome: an unknown source name, a package that does not have
-  // the source's shape, or frontmatter that violates its contract.
-  const loaded = loadSourceSkill(inputPath, options.source, cwd);
-  if (!loaded.ok) {
-    return refusal(base, toConversionIssues(loaded.issues));
+  const plan = planConversion(inputPath, {
+    target,
+    source: options.source,
+    cwd,
+  });
+
+  if (!plan.ok) {
+    const resolvedBase = { ...base, sourceRoot: plan.sourceRoot ?? base.sourceRoot };
+    return refusal(
+      resolvedBase,
+      plan.issues.map((issue) =>
+        error(issue.code, issue.message, issue.details === undefined ? undefined : issue.details),
+      ),
+    );
   }
 
-  const { skill, sourceRoot } = loaded;
-  const resolvedBase = { ...base, sourceRoot };
+  const resolvedBase = { ...base, sourceRoot: plan.sourceRoot };
 
-  // Refuse before doing anything else, so a refusal never creates output.
-  // Containment is checked first: an output equal to the source root also
-  // "exists", but naming the real problem is more useful than reporting that the
-  // source directory is in the way.
-  if (isAtOrBelow(sourceRoot, absoluteOutput)) {
+  // Output-path checks belong to the write step, not to planning: an assessment
+  // of a skill must not depend on where someone wants the package.
+  if (isAtOrBelow(plan.sourceRoot, absoluteOutput)) {
     return refusal(resolvedBase, [
       error(
         CONVERSION_CODES.outputInsideSource,
@@ -234,104 +215,18 @@ export function convertSkillToTarget(
     ]);
   }
 
-  // The generic validation gate is still applied after the source contract: a
-  // skill can satisfy its own source and still be outside what the IR can
-  // represent (a source-valid Unicode name, for example). That is reported
-  // distinctly so it is never mistaken for a source adapter defect.
-  const validation = validateBasicSkill(skill);
-  if (!validation.valid) {
-    if (options.source !== undefined) {
-      return refusal(resolvedBase, [
-        error(
-          SOURCE_CODES.sourceValidIrUnsupported,
-          `The skill satisfies the ${options.source} source contract but cannot be represented as Universal Skill IR. This is not a source adapter defect.`,
-          validation.errors.map((issue) => `${issue.code}: ${issue.message}`),
-        ),
-      ]);
-    }
-
-    return refusal(
-      resolvedBase,
-      validation.errors.map((issue) =>
-        error(CONVERSION_CODES.generatedPackageInvalid, `${issue.code}: ${issue.message}`),
-      ),
-    );
-  }
-
-  // Conversion builds IR v2 internally. A source that offers no portable
-  // semantics produces an empty `semantics`, which emits exactly the same
-  // frontmatter v1 did, so the generic path stays byte-compatible.
-  const provenance: SourceProvenance = {
-    format: loaded.format ?? GENERIC_LOCAL_SKILL_FORMAT,
-    ...(loaded.semantics === undefined ? {} : { semantics: loaded.semantics }),
-  };
-
-  let ir: SkillIRV2;
-  try {
-    ir = toSkillIRV2(skill, provenance, sourceRoot);
-  } catch (thrown) {
-    // A value that cannot be represented in canonical IR — an unsafe JSON key
-    // such as `__proto__`, or a non-JSON value — is valid source the IR cannot
-    // carry. That is a deterministic refusal, not a crash: the caller did nothing
-    // wrong, and dropping the value silently would be worse than refusing.
-    if (thrown instanceof SkillIRError) {
-      return refusal(resolvedBase, [
-        error(
-          CONVERSION_CODES.unrepresentableIrValue,
-          'A source value cannot be represented in the Universal Skill IR, so conversion is refused rather than dropping it',
-          thrown.problems,
-        ),
-      ]);
-    }
-    throw thrown;
-  }
-
-  // Lossless or refused: uninterpreted source frontmatter has no mapping yet.
-  const unmappedKeys = Object.keys(ir.source.extraFrontmatter);
-  if (unmappedKeys.length > 0) {
-    return refusal(resolvedBase, [
-      error(
-        CONVERSION_CODES.unmappedSourceFrontmatter,
-        'Source frontmatter has no target mapping, so conversion is refused rather than dropping it',
-        unmappedKeys,
-      ),
-    ]);
-  }
-
-  // Portable semantics the source *did* interpret but this target cannot express
-  // are a different refusal from raw source data: the meaning is known, and it
-  // simply has no counterpart here. Dropping or reinterpreting it would be a lie.
-  const unsupportedSemantics = unsupportedDshSemantics(ir.semantics);
-  if (unsupportedSemantics.length > 0) {
-    return refusal(resolvedBase, [
-      error(
-        CONVERSION_CODES.unsupportedTargetSemantic,
-        'Semantics were interpreted by the source but have no mapping in this target, so conversion is refused rather than dropping or reinterpreting them',
-        unsupportedSemantics,
-      ),
-    ]);
-  }
-
-  const collected = collectResources(ir.resources, sourceRoot);
-  if (collected.issues.length > 0) {
-    return refusal(resolvedBase, collected.issues);
-  }
-
-  const entry = renderDshSkillMarkdownV2(ir);
-  const plannedPaths = [
-    entry.path,
-    ...collected.nodes.filter((node) => node.kind === 'file').map((node) => node.destination),
-  ].sort((left, right) => left.localeCompare(right, 'en'));
-
+  const plannedPaths = [...plan.plannedPaths];
   const parentDirectory = path.dirname(absoluteOutput);
   mkdirSync(parentDirectory, { recursive: true });
 
   const stagingDirectory = mkdtempSync(path.join(parentDirectory, '.dsh-forge-staging-'));
 
   try {
-    writeFileSync(path.join(stagingDirectory, entry.path), entry.content, { encoding: 'utf8' });
+    writeFileSync(path.join(stagingDirectory, plan.entry.path), plan.entry.content, {
+      encoding: 'utf8',
+    });
 
-    for (const node of collected.nodes) {
+    for (const node of plan.resources.nodes) {
       if (node.kind === 'directory') {
         continue;
       }
@@ -436,6 +331,8 @@ export function renderConversionReport(
 
   if (!outcome.result.converted) {
     const lines = ['DSH Conversion', '', 'Result: REFUSED', '', 'Conversion Refused', ''];
+    // The order is the order the plan produced, which is already staged and
+    // sorted; re-sorting here would change an existing report.
     for (const issue of outcome.result.errors) {
       lines.push(`${issue.code}:`);
       lines.push(`  ${issue.message}`);
@@ -473,3 +370,6 @@ export function renderConversionReport(
 
   return `${lines.join('\n')}\n`;
 }
+
+/** Kept exported for callers that need the collector without a conversion. */
+export { collectResources };

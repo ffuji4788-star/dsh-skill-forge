@@ -7,14 +7,14 @@ for use with DeepSeek Harness.
 
 The long-term goal is a skill conversion toolchain. **Local analysis, structural
 validation, pinned DeepSeek Harness compatibility checking, canonical Universal
-Skill IR (v1 and v2), safe DSH package conversion, an Agent Skills source adapter
-and portable package semantics exist so far.**
+Skill IR (v1 and v2), safe DSH package conversion, an Agent Skills source adapter,
+portable package semantics and read-only compatibility assessment exist so far.**
 
 ## Current status
 
-**Phase 7 / Universal Skill IR v2 + portable semantics.**
+**Phase 8 / Real-world compatibility assessment.**
 
-Five commands exist, and they answer five different questions:
+Six commands exist, and they answer six different questions:
 
 | Command                                                              | Question it answers                                                            |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -22,6 +22,7 @@ Five commands exist, and they answer five different questions:
 | `dsh-forge validate <path>`                                          | Is the skill structurally sound?                                               |
 | `dsh-forge compat <path>`                                            | Would the pinned DeepSeek Harness skill implementation accept and discover it? |
 | `dsh-forge normalize <path> [--source <src>] [--ir-version <1\|2>]`  | What is the canonical, platform-neutral representation of this skill?          |
+| `dsh-forge assess <path> [--source <src>] --target dsh`              | Would this skill convert, and if not, why?                                     |
 | `dsh-forge convert <path> [--source <src>] --target dsh --out <dir>` | What does this skill look like as a DeepSeek Harness package?                  |
 
 Anything the tool cannot carry faithfully, it refuses rather than dropping.
@@ -419,6 +420,69 @@ reference validator and Anthropic's helper: [docs/agent-skills-source-contract.m
 
 This is **not** a claim that every Claude skill converts automatically. There is
 one source adapter, no adapter registry, and no automatic detection.
+
+### Compatibility assessment
+
+```bash
+dsh-forge assess ./my-skill \
+  --source agent-skills \
+  --target dsh
+```
+
+`assess` **is read-only**. It does not convert, does not write, and takes no
+`--out`. It reports why a conversion would currently succeed or be refused, and
+names the stage each blocker came from:
+
+```text
+DSH Skill Assessment
+
+Source:
+agent-skills
+
+Target:
+dsh
+
+Result:
+REFUSED
+
+Source Contract:
+PASS
+
+IR:
+PASS
+
+Semantics:
+REFUSED
+
+Resources:
+PASS
+
+Target Contract:
+PASS
+
+Issues:
+
+[UNSUPPORTED_TARGET_SEMANTIC]
+  stage: SEMANTIC
+  Semantics were interpreted by the source but have no mapping in this target, so conversion is refused rather than dropping or reinterpreting them
+  - license
+
+Convertible:
+NO
+```
+
+Stages are `SOURCE`, `IR`, `SEMANTIC`, `RESOURCE` and `TARGET`, and a stage that
+was never reached is reported as `SKIPPED` rather than as passing. Exit codes are
+the project's usual three: `0` convertible, `2` refused, `1` a fatal input or
+filesystem failure.
+
+The verdict comes from the same planner a real conversion runs, so an assessment
+cannot disagree with `convert`. There is no `--json` yet: the assessment schema is
+still under review, and the human-readable report is the contract for now.
+
+Measured against a pinned real-world corpus: [docs/real-world-compatibility-survey.md](./docs/real-world-compatibility-survey.md).
+Those percentages describe one repository at one commit and are not a product
+promise.
 
 ### Exit codes
 

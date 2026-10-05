@@ -24,6 +24,7 @@ export const CONVERSION_CODES = {
   unmappedSourceFrontmatter: 'UNMAPPED_SOURCE_FRONTMATTER',
   unsupportedTargetSemantic: 'UNSUPPORTED_TARGET_SEMANTIC',
   unrepresentableIrValue: 'UNREPRESENTABLE_IR_VALUE',
+  unsupportedTarget: 'UNSUPPORTED_TARGET',
   unsupportedResource: 'UNSUPPORTED_RESOURCE',
   duplicateResourceDestination: 'DUPLICATE_RESOURCE_DESTINATION',
   caseCollision: 'CASE_COLLISION',

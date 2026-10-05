@@ -43,7 +43,7 @@ describe('createProgram', () => {
     expect(readPackageInfo().nodeRequirement).toBe('>=20.19.0');
   });
 
-  it('registers exactly the five Phase 5 commands', () => {
+  it('registers exactly the six implemented commands', () => {
     const commands = createProgram().commands;
 
     expect(commands.map((command) => command.name())).toEqual([
@@ -51,6 +51,7 @@ describe('createProgram', () => {
       'validate',
       'compat',
       'normalize',
+      'assess',
       'convert',
     ]);
   });

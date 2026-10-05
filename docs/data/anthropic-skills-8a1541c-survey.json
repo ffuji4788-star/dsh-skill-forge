@@ -1,0 +1,468 @@
+{
+  "repository": "https://github.com/anthropics/skills",
+  "commit": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+  "surveyRoot": "skills",
+  "skillCount": 19,
+  "summary": {
+    "total": 19,
+    "convertible": 2,
+    "refused": 16,
+    "sourceInvalid": 1,
+    "irUnsupported": 0,
+    "frontmatterFrequency": {
+      "description": 19,
+      "license": 17,
+      "name": 19
+    },
+    "blockerFrequency": {
+      "UNSUPPORTED_TARGET_SEMANTIC: license": 16,
+      "AGENT_SKILLS_DESCRIPTION_TOO_LONG": 1
+    },
+    "withResources": 18,
+    "withScripts": 8,
+    "withReferences": 1,
+    "withAssets": 1
+  },
+  "skills": [
+    {
+      "name": "academy-guide",
+      "entryFile": "SKILL.md",
+      "entrySha256": "f27992510c051355dfe68c92394d509af730da5298094ec86834ee40bbd31376",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 1,
+      "resourceDirectories": [],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "algorithmic-art",
+      "entryFile": "SKILL.md",
+      "entrySha256": "3bc4092c09804853186524c826bc0621b940bb6122c05b84496dff95388e6eef",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 3,
+      "resourceDirectories": [
+        "templates"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "brand-guidelines",
+      "entryFile": "SKILL.md",
+      "entrySha256": "1120b3769e2985cefb3d25be981b1f914abeba57ae079b83c20c666c164fa9fe",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 1,
+      "resourceDirectories": [],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "canvas-design",
+      "entryFile": "SKILL.md",
+      "entrySha256": "a1f288079624402f30682753c1d43920b6664785698d21d3e7aa197450a6448b",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 82,
+      "resourceDirectories": [
+        "canvas-fonts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "claude-api",
+      "entryFile": "SKILL.md",
+      "entrySha256": "9aac10d9ffb8778c5b7c0b9ec612b3915e83065feb92763c8231469e9fbc29c9",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 80,
+      "resourceDirectories": [
+        "csharp",
+        "curl",
+        "go",
+        "java",
+        "php",
+        "python",
+        "ruby",
+        "shared",
+        "typescript"
+      ],
+      "status": "SOURCE_INVALID",
+      "issues": [
+        {
+          "stage": "SOURCE",
+          "code": "AGENT_SKILLS_DESCRIPTION_TOO_LONG",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "name": "discernment-nudge",
+      "entryFile": "SKILL.md",
+      "entrySha256": "9191177c4a8ef11a20dace786d708506b22d43e748c71287bb823de0dc812dad",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 1,
+      "resourceDirectories": [],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "doc-coauthoring",
+      "entryFile": "SKILL.md",
+      "entrySha256": "2e47d78846faeea4a56e9809c52700087a15a2155a3f293a3efbaded81398ef4",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "resourceFiles": 0,
+      "resourceDirectories": [],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "docx",
+      "entryFile": "SKILL.md",
+      "entrySha256": "8017469ea95fb7d28225c62daf8e2f3492a7b516fc64c18c28977cbf8980b7fe",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 60,
+      "resourceDirectories": [
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "frontend-design",
+      "entryFile": "SKILL.md",
+      "entrySha256": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 1,
+      "resourceDirectories": [],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "internal-comms",
+      "entryFile": "SKILL.md",
+      "entrySha256": "067b7587a344a928fc6534ef66b1bcd591fc7c26d207ea7ca3334aeb678d6475",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "examples"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mcp-builder",
+      "entryFile": "SKILL.md",
+      "entrySha256": "0f4592dcb53cf2b5d6b7febee6b4152018b565551a1c29e3c612f57b218ab295",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 9,
+      "resourceDirectories": [
+        "reference",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pdf",
+      "entryFile": "SKILL.md",
+      "entrySha256": "9f78b8359fbd4943ad260a7a1e436e5a96503406d6c34e99f69223d647d85b9c",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 11,
+      "resourceDirectories": [
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pptx",
+      "entryFile": "SKILL.md",
+      "entrySha256": "a7ff03e2c85b636f55232a6b1555f5dd90216b7a1a359ab289d8364e6acbc6a0",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 55,
+      "resourceDirectories": [
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "skill-creator",
+      "entryFile": "SKILL.md",
+      "entrySha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+      "frontmatterKeys": [
+        "description",
+        "name"
+      ],
+      "resourceFiles": 17,
+      "resourceDirectories": [
+        "agents",
+        "assets",
+        "eval-viewer",
+        "references",
+        "scripts"
+      ],
+      "status": "CONVERTIBLE",
+      "issues": []
+    },
+    {
+      "name": "slack-gif-creator",
+      "entryFile": "SKILL.md",
+      "entrySha256": "2efca615ce55a3edd8fc05c779068a8085816617991987e446606403cd3abb22",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 6,
+      "resourceDirectories": [
+        "core"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "theme-factory",
+      "entryFile": "SKILL.md",
+      "entrySha256": "c35893e221e28895c52143cc11bf30e41a44817796b39d4b15727dadc9796552",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 12,
+      "resourceDirectories": [
+        "themes"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "web-artifacts-builder",
+      "entryFile": "SKILL.md",
+      "entrySha256": "81c5002c6643b0de7b8710b00e7a9038daa6fb9b68d59870ee6adb12da8d10f8",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 4,
+      "resourceDirectories": [
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "webapp-testing",
+      "entryFile": "SKILL.md",
+      "entrySha256": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 5,
+      "resourceDirectories": [
+        "examples",
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xlsx",
+      "entryFile": "SKILL.md",
+      "entrySha256": "6712b39718fe815054abca9c3ee72f989613e6f771c8a5c58f30a65a6c905622",
+      "frontmatterKeys": [
+        "description",
+        "license",
+        "name"
+      ],
+      "resourceFiles": 52,
+      "resourceDirectories": [
+        "scripts"
+      ],
+      "status": "REFUSED",
+      "issues": [
+        {
+          "stage": "SEMANTIC",
+          "code": "UNSUPPORTED_TARGET_SEMANTIC",
+          "fields": [
+            "license"
+          ]
+        }
+      ]
+    }
+  ]
+}

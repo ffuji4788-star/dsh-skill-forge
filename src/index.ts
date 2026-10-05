@@ -57,6 +57,39 @@ export {
 } from './targets/dsh/dsh-target-adapter.js';
 export { isAtOrBelow, isPathWithin } from './utils/path-boundary.js';
 export {
+  assessSkill,
+  renderAssessmentReport,
+  type AssessmentIssue,
+  type AssessmentResult,
+  type AssessmentStageStatus,
+  type AssessmentStatus,
+  type AssessOptions,
+} from './assessment/assess-skill.js';
+export {
+  CONVERSION_STAGE_ORDER,
+  orderIssues,
+  planConversion,
+  type ConversionPlan,
+  type ConversionPlanFailure,
+  type ConversionPlanResult,
+  type ConversionStage,
+  type PlanOptions,
+  type StagedIssue,
+} from './conversion/conversion-plan.js';
+export { SUPPORTED_TARGET as CONVERSION_TARGET } from './conversion/target-id.js';
+export { runAssess, type RunAssessOptions } from './cli/assess-command.js';
+export {
+  renderSurveyReport,
+  serializeSnapshot,
+  surveyCorpus,
+  toSnapshot,
+  type SurveyOptions,
+  type SurveyReport,
+  type SurveySnapshot,
+  type SurveySummary,
+  type SurveyedSkill,
+} from './survey/corpus-survey.js';
+export {
   PORTABLE_SEMANTIC_FIELDS,
   toSerializedSemantics,
   validatePortableSemantics,
