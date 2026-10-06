@@ -1,18 +1,24 @@
 # DeepSeek Harness Skill Forge
 
-`dsh-skill-forge` is an open-source CLI project intended to read, analyze,
-normalize, compatibility-check, convert, validate and test skills from AI coding
-agent ecosystems (Claude Code, Codex, OpenCode, ...) so that they can be adapted
-for use with DeepSeek Harness.
+`dsh-skill-forge` is an open-source CLI for local skill analysis, validation,
+compatibility assessment and safe conversion to DeepSeek Harness. Its implemented
+source paths are generic local skills and Agent Skills, plus an explicit Codex
+profile that reuses the Agent Skills implementation. OpenCode support is
+research-only; no OpenCode adapter is implemented.
 
 The long-term goal is a skill conversion toolchain. **Local analysis, structural
 validation, pinned DeepSeek Harness compatibility checking, canonical Universal
 Skill IR (v1 and v2), safe DSH package conversion, an Agent Skills source adapter,
-portable package semantics and read-only compatibility assessment exist so far.**
+an explicit Codex source profile, portable package semantics and read-only
+compatibility assessment exist so far.**
 
 ## Current status
 
-**Phase 10 / Codex source profile and real-world compatibility assessment.**
+**Phase 11 complete as research-only — OpenCode source contract reconciliation.**
+The CLI supports generic-local, Agent Skills and the explicit Codex profile.
+OpenCode was evaluated against one pinned legacy V1 contract, but
+`--source opencode` is not implemented. See the [OpenCode contract](./docs/opencode-source-contract.md)
+and [Phase 11 independent audit](./docs/superpowers/audits/2026-10-05-phase-11-opencode-independent-audit.md).
 
 Six commands exist, and they answer six different questions:
 
@@ -603,15 +609,16 @@ so none of them can drift from the published package.
 
 ## Not implemented yet
 
-None of the following exists, not even as a stub:
+The following features are not implemented:
 
-- Claude / Codex / OpenCode **source** adapters (reading other ecosystems' skills)
+- Claude and OpenCode source adapters
+- A separate Codex adapter; the explicit Codex profile reuses the Agent Skills core
 - A source or target adapter registry, or any target other than `dsh`
 - Automatic migration
 - GitHub import
 - License analysis, SPDX resolution, or compatibility parsing
 - Tool-permission translation
-- Provenance analysis
+- Detailed cross-platform semantic provenance analysis
 - DeepSeek or any other LLM provider integration
 - AI-assisted rewriting
 - Skill installer, registry or marketplace
@@ -619,9 +626,10 @@ None of the following exists, not even as a stub:
 
 `import` and `install` do not exist, so passing them returns an unknown-command
 error. `convert` supports exactly one target (`--target dsh`) and explicitly
-selects at most one source (`--source agent-skills` or `--source generic-local`);
-there is no Claude, Codex or OpenCode conversion, and no automatic source
-detection. `compat` reports whether the **pinned** DeepSeek Harness implementation
+selects at most one source (`--source agent-skills`, `--source generic-local`, or
+`--source codex`); there is no Claude or OpenCode conversion, and no automatic
+source detection. The Codex option is a profile over the Agent Skills core, not a
+separate adapter. `compat` reports whether the **pinned** DeepSeek Harness implementation
 would accept a skill — it makes no claim about future upstream revisions.
 `normalize` produces a canonical representation only, and writes nothing.
 

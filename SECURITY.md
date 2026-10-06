@@ -2,14 +2,14 @@
 
 ## Untrusted input
 
-Every third-party skill, file, archive and repository is treated as untrusted
-input. This applies to content obtained from the network as well as to content
-already on disk.
+The CLI reads local files and directories supplied by the user. Treat their
+contents as untrusted data, including third-party skills. The CLI does not
+download skill repositories or archives.
 
 ## Never executed automatically
 
-`dsh-skill-forge` does not automatically execute anything that came from a
-third-party skill:
+`dsh-skill-forge` parses and copies skill content as data. It does not execute
+anything that came from a third-party skill:
 
 - shell commands
 - PowerShell commands
@@ -20,18 +20,20 @@ third-party skill:
 
 Third-party content is data to be read and analyzed, never a program to run.
 
-## Status
+## Current behavior
 
-Phase 0 / Project Bootstrap processes no third-party input at all: no skill is
-read, downloaded or executed, and no network request is made. The project
-depends on exactly one runtime package (`commander`) for CLI argument parsing.
+- The CLI operates on local paths and does not fetch remote skills or make
+  network requests.
+- It does not send skill content to an LLM or install skill dependencies.
+- URLs in a Codex `agents/openai.yaml` dependency declaration are parsed as
+  input data; they are never fetched, probed, connected to or installed.
+- Runtime dependencies are `commander` and `yaml`.
 
 ## Secrets
 
-No API key, token or secret is read, logged or stored in Phase 0. `.env` is
-git-ignored and `.env.example` documents no variable, because no code reads one
-yet. A secret must never be committed; when a later phase introduces
-configuration it belongs in `.env` (ignored) and in the process environment.
+The CLI has no API-key or token configuration and does not read credentials
+from environment variables. `.env` is git-ignored; `.env.example` currently
+defines no variables. Never commit real credentials or private keys.
 
 ## Reporting a vulnerability
 
